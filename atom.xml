@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://colorlight.github.io/"/>
-  <updated>2020-07-31T05:14:11.738Z</updated>
+  <updated>2020-10-10T09:39:39.311Z</updated>
   <id>https://colorlight.github.io/</id>
   
   <author>
@@ -17,11 +17,41 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>捉虫日记漏洞总结</title>
+    <link href="https://colorlight.github.io/2020/10/10/%E6%8D%89%E8%99%AB%E6%97%A5%E8%AE%B0%E6%BC%8F%E6%B4%9E%E6%80%BB%E7%BB%93/"/>
+    <id>https://colorlight.github.io/2020/10/10/%E6%8D%89%E8%99%AB%E6%97%A5%E8%AE%B0%E6%BC%8F%E6%B4%9E%E6%80%BB%E7%BB%93/</id>
+    <published>2020-10-10T08:44:18.000Z</published>
+    <updated>2020-10-10T09:39:39.311Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近阅读了捉虫日记这本少有的讲述漏洞挖掘方法的书籍，本书虽然只有7个漏洞，但是对每个漏洞到底是如何发现的做了很详细的说明，还原了漏洞挖掘的思维过程，笔者认为这是本书最有价值的一块内容，现在大部分的文章都是讲述了漏洞原理但是对于漏洞是如何发现的内容涉及很少。漏洞的发现过程是比较琐碎的，甚至难以回忆，很容易忘记当时的发现的思路历程，所以比较难成文，笔者也将努力将原书中我比较喜欢的几个漏洞的ROOT CAUSE和如何找到做一些简单的总结。</p><h2 id="0x00-ESCAPE-FROM-WWW-ZONE漏洞"><a href="#0x00-ESCAPE-FROM-WWW-ZONE漏洞" class="headerlink" title="0x00 ESCAPE FROM WWW ZONE漏洞"></a>0x00 ESCAPE FROM WWW ZONE漏洞</h2><ul><li><p>ROOT CAUSE<br>由于有错误条件是两个方式共同表示的，返回值和一个参数值，当出现错误条件的时候，只设置了其中一个条件（返回值）忘记设置了参数，由于对同一个错误状态的两种表达方式不同步，最终导致这个oob</p></li><li><p>如何发现这个漏洞</p><ol><li>观察错误条件是否是两个因素或者多个因素决定的，对于这种编程范式就可以好好审计</li><li>构造好fuzz条件，fuzz 输入payload</li></ol></li></ul><h2 id="0x01-NULL-POINTER-FTW漏洞"><a href="#0x01-NULL-POINTER-FTW漏洞" class="headerlink" title="0x01 NULL POINTER FTW漏洞"></a>0x01 NULL POINTER FTW漏洞</h2><ul><li><p>ROOT CAUSE<br>由于对长度信息的处理不恰当，将一个unsigned 类型直接赋值给 有符号的变量，对这个长度信息所做的任何判断大小比较都会存在风险。</p></li><li><p>如何发现这漏洞<br>对于TLV格式的数据，定位抽取长度的变量，观察这个变量是否赋给了有符号的变量，不需要对所有的类型转换进行审计，只需要对这种标识长度的变量的类型转换进行审计就行。这种有符号的比较大小本身就是容易出问题，有符号的比较就要考虑到小于0的情况</p></li><li><p>漏洞利用<br>造成的是NULL pointer derefernce，但是这个并不是制造成了dos，还造成了控制ip，由于这个空指针应用的偏移是可控的，所以可以落到got表中，对got表的修改，即可以在紧接着的call 目标got表函数时造成劫持</p></li></ul><h2 id="0x02-ONE-KERNEL-TO-RULE-THEM-ALL-漏洞"><a href="#0x02-ONE-KERNEL-TO-RULE-THEM-ALL-漏洞" class="headerlink" title="0x02 ONE KERNEL TO RULE THEM ALL 漏洞"></a>0x02 ONE KERNEL TO RULE THEM ALL 漏洞</h2><ul><li>ROOT CAUSE<br>memcpy函数的第一个参数是任意可变的，即使n是固定值，直接实现了write what where</li><li>如何发现这个漏洞<ol><li>作者还是通过跟踪数据流向的方法在静态的审计函数的处理流程，重点关注了与长度相关的处理逻辑，但是这个漏洞不需要dst与n的不同步即可触发，或者可以理解为是不同步的一种特殊情况，由于dst是任意的，所以永远与n不同步。</li><li>除了仔细审计与长度相关的代码，还需要注意的是当涉及到与memcpy这种dst，src，和copy数目相关的函数的时候，一定要重点关注dst和num这两个值，要关注dst的来源是什么，是否和num同步，是否可能造成溢出，像这个漏洞是否dst是直接由用户指定的，这都是根据dst的来源而定的</li></ol></li></ul><h2 id="0x03-A-BUG-OLDER-THAN-4-4BSD-漏洞"><a href="#0x03-A-BUG-OLDER-THAN-4-4BSD-漏洞" class="headerlink" title="0x03 A BUG OLDER THAN 4.4BSD 漏洞"></a>0x03 A BUG OLDER THAN 4.4BSD 漏洞</h2><ul><li>ROOT CAUSE<br>从payload中转化的长度信息，赋值给了有符号数，对有符号的比较，比较绕过，导致越界的访问</li><li>如何发现这个漏洞<ol><li>在追踪数据流的时候，不仅对数据的长度信息关注，还需要对任何数目相关的字段关注，这些字段的比较大小是容易出错的</li><li>特别这些数目是有符号数的比较，是非常危险的，一定要注意小于0的情况是否是预期内的</li></ol></li></ul><h2 id="0x04-THE-RINGTONE-MASSACRE漏洞"><a href="#0x04-THE-RINGTONE-MASSACRE漏洞" class="headerlink" title="0x04 THE RINGTONE MASSACRE漏洞"></a>0x04 THE RINGTONE MASSACRE漏洞</h2><ul><li>Fuzz方法<br>变异策略<ul><li>通过对一个合法的文件格式进行逐个字节的0xff替换</li><li>这种变异策略是相对高效的，可以找到一些简单的有关长度的漏洞，而且不需要对格式协议有详细的了解，smb也可以尝试利用同样的方法进行一些测试。</li></ul></li></ul><h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>本文主要是对书中几个漏洞的根因进行了提炼，对根因的理解抽象才能够举一反三，所以漏洞原因也尽量精简，笔者也在整理漏洞挖掘方法，但是由于分析的漏洞数量不够多，还不好拿出分享，等到分析足够多的漏洞，到时会以makdown map的形式展示出。<br>以后也会经常以本篇文章的形式分析一系列漏洞。</p><h2 id="版权声明"><a href="#版权声明" class="headerlink" title="版权声明"></a>版权声明</h2><p>本文作者为colorlight，转载请注明出处 <a href="https://colorlight.github.io">https://colorlight.github.io</a></p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;前言&quot;&gt;&lt;a href=&quot;#前言&quot; class=&quot;headerlink&quot; title=&quot;前言&quot;&gt;&lt;/a&gt;前言&lt;/h2&gt;&lt;p&gt;最近阅读了捉虫日记这本少有的讲述漏洞挖掘方法的书籍，本书虽然只有7个漏洞，但是对每个漏洞到底是如何发现的做了很详细的说明，还原了漏洞挖掘的思
+      
+    
+    </summary>
+    
+    
+      <category term="漏洞挖掘方法" scheme="https://colorlight.github.io/categories/%E6%BC%8F%E6%B4%9E%E6%8C%96%E6%8E%98%E6%96%B9%E6%B3%95/"/>
+    
+    
+      <category term="如何发现漏洞" scheme="https://colorlight.github.io/tags/%E5%A6%82%E4%BD%95%E5%8F%91%E7%8E%B0%E6%BC%8F%E6%B4%9E/"/>
+    
+      <category term="ROOT CAUSE" scheme="https://colorlight.github.io/tags/ROOT-CAUSE/"/>
+    
+      <category term="Fuzz 变异策略" scheme="https://colorlight.github.io/tags/Fuzz-%E5%8F%98%E5%BC%82%E7%AD%96%E7%95%A5/"/>
+    
+  </entry>
+  
+  <entry>
     <title>伪造LTE地震海啸警报</title>
     <link href="https://colorlight.github.io/2020/07/29/%E4%BC%AA%E9%80%A0LTE%E5%9C%B0%E9%9C%87%E6%B5%B7%E5%95%B8%E8%AD%A6%E6%8A%A5/"/>
     <id>https://colorlight.github.io/2020/07/29/%E4%BC%AA%E9%80%A0LTE%E5%9C%B0%E9%9C%87%E6%B5%B7%E5%95%B8%E8%AD%A6%E6%8A%A5/</id>
     <published>2020-07-29T11:54:54.000Z</published>
-    <updated>2020-07-31T05:14:11.738Z</updated>
+    <updated>2020-10-10T09:22:48.808Z</updated>
     
     <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这是我在2019年的HITB和DEFCON China的议题的解读，现在同步到我的blog上</p><h2 id="议题摘要"><a href="#议题摘要" class="headerlink" title="议题摘要"></a>议题摘要</h2><p>本议题将讨论LTE协议中与PWS(Public Warning System公共预警系统)相关的安全漏洞。 PWS是向公众播报地震海啸以及其他紧急事件的预警系统，在灾难发生前，PWS系统可以为人民的生命安全争取极其宝贵的时间。<br>我们仔细研究了LTE协议中与PWS相关部分，发现LTE空口中承载的预警信息是不经过加密以及完整性保护的，我们通过常用的软件无线电设备即可以仿造虚假的灾难预警信息，并且成功的迫使支持PWS的Android和iPhone手机发出灾难警报。通过对LTE协议中参数的精心配置，我们还实现了将灾难警报信息伪装成诈骗钓鱼以及广告短信的形式。最后我们提出了一些相应的解决办法，来防止PWS系统沦为摆设甚至成为电信诈骗的工具。</p><h2 id="议题解析"><a href="#议题解析" class="headerlink" title="议题解析"></a>议题解析</h2><p>3GPP协议中规定了4种公共警报系统，分别是日本的ETWS，美国的CMAS，韩国的KPAS以及欧洲的EU-Alert。由于各个国家的安全要求不同，因此标准化工作较为困难。为了避免系统复杂性，防止漫游到其他国家手机不能正常接收警报信息，目前的标准中并未加入对警报信息的签名等验证信息。<br><img src="/images/lte/clipboard1.png"><br><img src="/images/lte/clipboard2.png"><br>我们利用软件无线电设备USRP B210和开源的LTE测试平台srsLTE搭建LTE伪基站。为了不干扰正常用户的通信，我们的实验选择在了电磁屏蔽屋内进行。<br><img src="/images/lte/clipboard3.png"><br>为了能够使手机发起小区重选流程，我们搭建的伪基站的参数要尽量模仿合法基站的设置，可以利用一些常用的路测软件获取当前基站的参数，如TAC PCI以及下行频点号。<br><img src="/images/lte/clipboard4.png"><br>由于LTE的小区重选机制相对于GSM等系统较为严格，即使信号强度高于合法基站，仍然难以触发手机的小区重选，我们可以选在优先频点或者将物理小区号设置成与合法基站相同的以增加接入成功率。<br><img src="/images/lte/clipboard5.png"><br>为了避免手机发起鉴权流程，要将TAC设置成与合法基站一样的，手机无法发起位置区更新，则不会对伪基站的合法性进行甄别。<br><img src="/images/lte/clipboard6.png"><br>LTE协议中直接携带警报信息内容的是系统广播信息System information，其中SIB 10携带的是日本的ETWS的第一级警报信息，此信息仅包含固定的警报消息类型，如地震海啸或者其他紧急警报。SIB 11中携带的是ETWS的第二级警报信息，包含具体的警报内容，如地震中心，地震强度等，此信息是自定义的。SIB 12是携带的CMAS KPAS和EU-ALERT警报消息。<br>由于ETWS相较于其他系统分为两个等级的警报信息，较为复杂，我们以ETWS为例进行伪造警报消息。<br><img src="/images/lte/clipboard7.png"><br>除了SIB10 SIB11直接携带警报消息外，SIB 1负责对SIB10以及SIB11的调度，paging消息负责向用户手机提示有警报消息需要接收。<br><img src="/images/lte/clipboard8.png"><br>由于srsLTE中没有针对SIB10的定义与实现，我们需要比照协议对SIB10进行构造，其中messageIdentifer字段标识了消息类型，地震警报需要将此值设置为0x1102。其他参数的具体配置可以参看截图。<br><img src="/images/lte/clipboard9.png"><br>我们需要在srsLTE源码中添加对paging消息的修改，使paging消息中增加对ETWS警报信息的指示。<br><img src="/images/lte/clipboard10.png"><br>其实我们不仅可以利用ETWS消息发送地震警报，我们甚至可以它改造成一个广告诈骗等垃圾短信。将message identifier字段设置为0x1104就可以使手机不发出警报声，但是仍弹出信息内容。<br><img src="/images/lte/clipboard11.png"><br>以上是我们在Google Pixel手机上分别伪造的地震警报信息和添加了钓鱼电话的诈骗信息。<br><img src="/images/lte/clipboard12.png"><br>由于中国没有在手机移动网络中支持公共报警服务，因此国内版的Android手机并不会对伪造的警报信息作出响应，同时国行版的苹果手机也仅在MCC为001,MNC为01的测试网络中对警报信息作出响应。<br><img src="/images/lte/clipboard13.png"><br>公共警报信息的不加密造成的潜在安全威胁还是较大的，如果在人口密集处如满座的球场内发送警报信息有可能导致踩踏事件。2018年的夏威夷导弹误警报就是基于美国的PWS系统CMAS传播的，这导致了全城的恐慌和社会混乱。<br><img src="/images/lte/clipboard14.png"><br>目前可以利用非对称加密的机制对警报信息添加签名信息来防止恶意伪造的虚假警报。<br><img src="/images/lte/clipboard15.png"><br>由于各国对警报消息的要求不同，3GPP的警报的标准化进行较为困难，导致数字签名验证机制并没有作为一种强制执行要求，所以现在的手机均是不验证警报消息的合法性的。</p><h2 id="攻击演示"><a href="#攻击演示" class="headerlink" title="攻击演示"></a>攻击演示</h2><iframe width="640" height="360" src="https://www.youtube.com/embed/B1RVA01g3Bg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><ul><li><a href="https://conference.hitb.org/hitbsecconf2019ams/sessions/haxpo-this-is-a-public-service-announcement-hacking-lte-public-warning-systems/" target="_blank" rel="noopener">HAXPO: This is a Public Service Announcement: Hacking LTE Public Warning Systems</a></li><li><a href="https://www.defcon.org/html/dc-china-1/dc-cn-1-speakers.html" target="_blank" rel="noopener">WARNING: Magnitude 10 Earthquake Is Coming in One Minute</a></li><li><a href="https://www.anquanke.com/post/id/177963" target="_blank" rel="noopener">安全客|HITB议题解读 | 伪造LTE地震海啸警信息</a></li><li><a href="https://conference.hitb.org/hitbsecconf2019ams/materials/HAXPO%20D1%20-%20Hacking%20LTE%20Public%20Warning%20Systems%20-%20Weiguang%20Li.pdf" target="_blank" rel="noopener">HAXPO D1 - Hacking LTE Public Warning Systems - Weiguang Li.pdf</a></li></ul><h2 id="版权声明"><a href="#版权声明" class="headerlink" title="版权声明"></a>版权声明</h2><p>本文作者为colorlight，首发于安全客<br>转载请注明出处 <a href="https://colorlight.github.io/2020/07/29/伪造LTE地震海啸警报/">https://colorlight.github.io/2020/07/29/伪造LTE地震海啸警报/</a></p>]]></content>
     

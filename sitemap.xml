@@ -2,21 +2,28 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://colorlight.github.io/2020/07/29/%E4%BC%AA%E9%80%A0LTE%E5%9C%B0%E9%9C%87%E6%B5%B7%E5%95%B8%E8%AD%A6%E6%8A%A5/</loc>
+    <loc>https://colorlight.github.io/2020/10/10/%E6%8D%89%E8%99%AB%E6%97%A5%E8%AE%B0%E6%BC%8F%E6%B4%9E%E6%80%BB%E7%BB%93/</loc>
     
-    <lastmod>2020-07-31</lastmod>
+    <lastmod>2020-10-10</lastmod>
     
   </url>
   
   <url>
-    <loc>https://colorlight.github.io/tags/index.html</loc>
+    <loc>https://colorlight.github.io/2020/07/29/%E4%BC%AA%E9%80%A0LTE%E5%9C%B0%E9%9C%87%E6%B5%B7%E5%95%B8%E8%AD%A6%E6%8A%A5/</loc>
     
-    <lastmod>2020-07-31</lastmod>
+    <lastmod>2020-10-10</lastmod>
     
   </url>
   
   <url>
     <loc>https://colorlight.github.io/about/index.html</loc>
+    
+    <lastmod>2020-10-10</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://colorlight.github.io/tags/index.html</loc>
     
     <lastmod>2020-07-31</lastmod>
     
@@ -39,50 +46,71 @@
 
   <url>
     <loc>https://colorlight.github.io/</loc>
-    <lastmod>2020-08-04</lastmod>
+    <lastmod>2020-10-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
   
   <url>
-    <loc>https://colorlight.github.io/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</loc>
-    <lastmod>2020-08-04</lastmod>
+    <loc>https://colorlight.github.io/tags/%E5%A6%82%E4%BD%95%E5%8F%91%E7%8E%B0%E6%BC%8F%E6%B4%9E/</loc>
+    <lastmod>2020-10-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>https://colorlight.github.io/tags/I-O/</loc>
-    <lastmod>2020-08-04</lastmod>
+    <loc>https://colorlight.github.io/tags/ROOT-CAUSE/</loc>
+    <lastmod>2020-10-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>https://colorlight.github.io/tags/mmap/</loc>
-    <lastmod>2020-08-04</lastmod>
+    <loc>https://colorlight.github.io/tags/Fuzz-%E5%8F%98%E5%BC%82%E7%AD%96%E7%95%A5/</loc>
+    <lastmod>2020-10-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://colorlight.github.io/tags/PWS/</loc>
-    <lastmod>2020-08-04</lastmod>
+    <lastmod>2020-10-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://colorlight.github.io/tags/LTE%E5%AE%89%E5%85%A8/</loc>
-    <lastmod>2020-08-04</lastmod>
+    <lastmod>2020-10-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://colorlight.github.io/tags/%E4%BC%AA%E9%80%A0%E5%9C%B0%E9%9C%87%E6%B6%88%E6%81%AF/</loc>
-    <lastmod>2020-08-04</lastmod>
+    <lastmod>2020-10-10</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://colorlight.github.io/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</loc>
+    <lastmod>2020-10-10</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://colorlight.github.io/tags/I-O/</loc>
+    <lastmod>2020-10-10</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://colorlight.github.io/tags/mmap/</loc>
+    <lastmod>2020-10-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -90,15 +118,22 @@
 
   
   <url>
-    <loc>https://colorlight.github.io/categories/OS/</loc>
-    <lastmod>2020-08-04</lastmod>
+    <loc>https://colorlight.github.io/categories/%E6%BC%8F%E6%B4%9E%E6%8C%96%E6%8E%98%E6%96%B9%E6%B3%95/</loc>
+    <lastmod>2020-10-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://colorlight.github.io/categories/LTE-security/</loc>
-    <lastmod>2020-08-04</lastmod>
+    <lastmod>2020-10-10</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://colorlight.github.io/categories/OS/</loc>
+    <lastmod>2020-10-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>

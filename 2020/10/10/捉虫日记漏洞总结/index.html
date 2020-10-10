@@ -96,20 +96,18 @@
 
 
 
-  <meta name="description" content="操作系统将所有的io都抽象为了一个文件的读写，我浅谈底层一点的模型。以这两个语句为例12read(file, tmp_buf, len);write(socket, tmp_buf, len); 分别是从文件读数据到tmp_buf用户的内存，再从tmp_buf发送到socket 这个过程中发生了什么，CPU 内存 硬盘 和 网卡之间是如何进行交互的呢。  简单的两句话，却包含着4次复制过程！读写分">
-<meta name="keywords" content="操作系统,I&#x2F;O,mmap">
+  <meta name="description" content="前言最近阅读了捉虫日记这本少有的讲述漏洞挖掘方法的书籍，本书虽然只有7个漏洞，但是对每个漏洞到底是如何发现的做了很详细的说明，还原了漏洞挖掘的思维过程，笔者认为这是本书最有价值的一块内容，现在大部分的文章都是讲述了漏洞原理但是对于漏洞是如何发现的内容涉及很少。漏洞的发现过程是比较琐碎的，甚至难以回忆，很容易忘记当时的发现的思路历程，所以比较难成文，笔者也将努力将原书中我比较喜欢的几个漏洞的ROOT">
+<meta name="keywords" content="如何发现漏洞,ROOT CAUSE,Fuzz 变异策略">
 <meta property="og:type" content="article">
-<meta property="og:title" content="浅谈i&#x2F;o底层过程">
-<meta property="og:url" content="https://colorlight.github.io/2019/04/08/浅谈i-o底层过程/index.html">
+<meta property="og:title" content="捉虫日记漏洞总结">
+<meta property="og:url" content="https://colorlight.github.io/2020/10/10/捉虫日记漏洞总结/index.html">
 <meta property="og:site_name" content="Colorlight&#39;s Blog">
-<meta property="og:description" content="操作系统将所有的io都抽象为了一个文件的读写，我浅谈底层一点的模型。以这两个语句为例12read(file, tmp_buf, len);write(socket, tmp_buf, len); 分别是从文件读数据到tmp_buf用户的内存，再从tmp_buf发送到socket 这个过程中发生了什么，CPU 内存 硬盘 和 网卡之间是如何进行交互的呢。  简单的两句话，却包含着4次复制过程！读写分">
+<meta property="og:description" content="前言最近阅读了捉虫日记这本少有的讲述漏洞挖掘方法的书籍，本书虽然只有7个漏洞，但是对每个漏洞到底是如何发现的做了很详细的说明，还原了漏洞挖掘的思维过程，笔者认为这是本书最有价值的一块内容，现在大部分的文章都是讲述了漏洞原理但是对于漏洞是如何发现的内容涉及很少。漏洞的发现过程是比较琐碎的，甚至难以回忆，很容易忘记当时的发现的思路历程，所以比较难成文，笔者也将努力将原书中我比较喜欢的几个漏洞的ROOT">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://leokongwq.github.io/2017/01/12/linux-zero-copy/6345f1.jpg">
-<meta property="og:updated_time" content="2020-07-31T03:18:15.406Z">
+<meta property="og:updated_time" content="2020-10-10T09:39:39.311Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="浅谈i&#x2F;o底层过程">
-<meta name="twitter:description" content="操作系统将所有的io都抽象为了一个文件的读写，我浅谈底层一点的模型。以这两个语句为例12read(file, tmp_buf, len);write(socket, tmp_buf, len); 分别是从文件读数据到tmp_buf用户的内存，再从tmp_buf发送到socket 这个过程中发生了什么，CPU 内存 硬盘 和 网卡之间是如何进行交互的呢。  简单的两句话，却包含着4次复制过程！读写分">
-<meta name="twitter:image" content="https://leokongwq.github.io/2017/01/12/linux-zero-copy/6345f1.jpg">
+<meta name="twitter:title" content="捉虫日记漏洞总结">
+<meta name="twitter:description" content="前言最近阅读了捉虫日记这本少有的讲述漏洞挖掘方法的书籍，本书虽然只有7个漏洞，但是对每个漏洞到底是如何发现的做了很详细的说明，还原了漏洞挖掘的思维过程，笔者认为这是本书最有价值的一块内容，现在大部分的文章都是讲述了漏洞原理但是对于漏洞是如何发现的内容涉及很少。漏洞的发现过程是比较琐碎的，甚至难以回忆，很容易忘记当时的发现的思路历程，所以比较难成文，笔者也将努力将原书中我比较喜欢的几个漏洞的ROOT">
 
 
 
@@ -118,7 +116,7 @@
 
 
 
-  <link rel="canonical" href="https://colorlight.github.io/2019/04/08/浅谈i-o底层过程/">
+  <link rel="canonical" href="https://colorlight.github.io/2020/10/10/捉虫日记漏洞总结/">
 
 
 
@@ -128,7 +126,7 @@
   };
 </script>
 
-  <title>浅谈i/o底层过程 | Colorlight's Blog</title>
+  <title>捉虫日记漏洞总结 | Colorlight's Blog</title>
   
 
 
@@ -403,7 +401,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://colorlight.github.io/2019/04/08/浅谈i-o底层过程/">
+    <link itemprop="mainEntityOfPage" href="https://colorlight.github.io/2020/10/10/捉虫日记漏洞总结/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Colorlight">
@@ -420,7 +418,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">浅谈i/o底层过程
+          <h1 class="post-title" itemprop="name headline">捉虫日记漏洞总结
 
               
             
@@ -446,24 +444,12 @@
                 
               
 
-              <time title="创建时间：2019-04-08 02:56:22" itemprop="dateCreated datePublished" datetime="2019-04-08T02:56:22+08:00">2019-04-08</time>
+              <time title="创建时间：2020-10-10 16:44:18 / 修改时间：17:39:39" itemprop="dateCreated datePublished" datetime="2020-10-10T16:44:18+08:00">2020-10-10</time>
             
 
             
               
 
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2020-07-31 11:18:15" itemprop="dateModified" datetime="2020-07-31T11:18:15+08:00">2020-07-31</time>
               
             
           </span>
@@ -480,7 +466,7 @@
                 <span class="post-meta-item-text">分类于</span>
               
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/OS/" itemprop="url" rel="index"><span itemprop="name">OS</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/漏洞挖掘方法/" itemprop="url" rel="index"><span itemprop="name">漏洞挖掘方法</span></a></span>
 
                 
                 
@@ -499,8 +485,8 @@
                 </span>
             
                 <span class="post-meta-item-text">评论数：</span>
-                <a href="/2019/04/08/浅谈i-o底层过程/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2019/04/08/浅谈i-o底层过程/" itemprop="commentCount"></span>
+                <a href="/2020/10/10/捉虫日记漏洞总结/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2020/10/10/捉虫日记漏洞总结/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -508,7 +494,7 @@
 
           
           
-            <span id="/2019/04/08/浅谈i-o底层过程/" class="leancloud_visitors" data-flag-title="浅谈i/o底层过程">
+            <span id="/2020/10/10/捉虫日记漏洞总结/" class="leancloud_visitors" data-flag-title="捉虫日记漏洞总结">
               <span class="post-meta-divider">|</span>
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
@@ -539,24 +525,50 @@
       
 
       
-        <p>操作系统将所有的io都抽象为了一个文件的读写，我浅谈底层一点的模型。<br>以这两个语句为例<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">read(file, tmp_buf, len);</span><br><span class="line">write(socket, tmp_buf, len);</span><br></pre></td></tr></table></figure></p>
-<p>分别是从文件读数据到tmp_buf用户的内存，再从tmp_buf发送到socket</p>
-<p>这个过程中发生了什么，CPU 内存 硬盘 和 网卡之间是如何进行交互的呢。</p>
-<p><img src="https://leokongwq.github.io/2017/01/12/linux-zero-copy/6345f1.jpg" alt="image"></p>
-<p>简单的两句话，却包含着4次复制过程！<br>读写分别两次。</p>
-<h4 id="read过程"><a href="#read过程" class="headerlink" title="read过程"></a>read过程</h4><ul>
-<li>硬盘通过DMA机制将数据复制到操作系统内核内存缓冲区中</li>
-<li>操作系统通过CPU将内核内存复制到用户内存</li>
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近阅读了捉虫日记这本少有的讲述漏洞挖掘方法的书籍，本书虽然只有7个漏洞，但是对每个漏洞到底是如何发现的做了很详细的说明，还原了漏洞挖掘的思维过程，笔者认为这是本书最有价值的一块内容，现在大部分的文章都是讲述了漏洞原理但是对于漏洞是如何发现的内容涉及很少。漏洞的发现过程是比较琐碎的，甚至难以回忆，很容易忘记当时的发现的思路历程，所以比较难成文，笔者也将努力将原书中我比较喜欢的几个漏洞的ROOT CAUSE和如何找到做一些简单的总结。</p>
+<h2 id="0x00-ESCAPE-FROM-WWW-ZONE漏洞"><a href="#0x00-ESCAPE-FROM-WWW-ZONE漏洞" class="headerlink" title="0x00 ESCAPE FROM WWW ZONE漏洞"></a>0x00 ESCAPE FROM WWW ZONE漏洞</h2><ul>
+<li><p>ROOT CAUSE<br>由于有错误条件是两个方式共同表示的，返回值和一个参数值，当出现错误条件的时候，只设置了其中一个条件（返回值）忘记设置了参数，由于对同一个错误状态的两种表达方式不同步，最终导致这个oob</p>
+</li>
+<li><p>如何发现这个漏洞</p>
+<ol>
+<li>观察错误条件是否是两个因素或者多个因素决定的，对于这种编程范式就可以好好审计</li>
+<li>构造好fuzz条件，fuzz 输入payload</li>
+</ol>
+</li>
 </ul>
-<h4 id="write过程"><a href="#write过程" class="headerlink" title="write过程"></a>write过程</h4><ul>
-<li>操作系统通过CPU将用户内存复制到socket内核内存</li>
-<li>网卡DMA机制将内核内存复制到网卡</li>
+<h2 id="0x01-NULL-POINTER-FTW漏洞"><a href="#0x01-NULL-POINTER-FTW漏洞" class="headerlink" title="0x01 NULL POINTER FTW漏洞"></a>0x01 NULL POINTER FTW漏洞</h2><ul>
+<li><p>ROOT CAUSE<br>由于对长度信息的处理不恰当，将一个unsigned 类型直接赋值给 有符号的变量，对这个长度信息所做的任何判断大小比较都会存在风险。</p>
+</li>
+<li><p>如何发现这漏洞<br>对于TLV格式的数据，定位抽取长度的变量，观察这个变量是否赋给了有符号的变量，不需要对所有的类型转换进行审计，只需要对这种标识长度的变量的类型转换进行审计就行。这种有符号的比较大小本身就是容易出问题，有符号的比较就要考虑到小于0的情况</p>
+</li>
+<li><p>漏洞利用<br>造成的是NULL pointer derefernce，但是这个并不是制造成了dos，还造成了控制ip，由于这个空指针应用的偏移是可控的，所以可以落到got表中，对got表的修改，即可以在紧接着的call 目标got表函数时造成劫持</p>
+</li>
 </ul>
-<h4 id="减少复制的方法"><a href="#减少复制的方法" class="headerlink" title="减少复制的方法"></a>减少复制的方法</h4><p>这两句话造成的复制太多了，为了较少复制的次数可以使用</p>
-<ul>
-<li>mmap： tmp_buf = mmap(file, len)， 这样可以省去内核到用户空间的复制</li>
-<li>sendfile()： sendfile(socket, file, len) 这种新的系统调用可以省去用户缓冲区的存在<br>由于读文件的内核缓冲区与socket的内核缓冲区不同，仍需要这二者之间的复制。但是如果支持零拷贝的情况下，也不需要二者之间的复制了。<br>一共只需要两次复制。</li>
+<h2 id="0x02-ONE-KERNEL-TO-RULE-THEM-ALL-漏洞"><a href="#0x02-ONE-KERNEL-TO-RULE-THEM-ALL-漏洞" class="headerlink" title="0x02 ONE KERNEL TO RULE THEM ALL 漏洞"></a>0x02 ONE KERNEL TO RULE THEM ALL 漏洞</h2><ul>
+<li>ROOT CAUSE<br>memcpy函数的第一个参数是任意可变的，即使n是固定值，直接实现了write what where</li>
+<li>如何发现这个漏洞<ol>
+<li>作者还是通过跟踪数据流向的方法在静态的审计函数的处理流程，重点关注了与长度相关的处理逻辑，但是这个漏洞不需要dst与n的不同步即可触发，或者可以理解为是不同步的一种特殊情况，由于dst是任意的，所以永远与n不同步。</li>
+<li>除了仔细审计与长度相关的代码，还需要注意的是当涉及到与memcpy这种dst，src，和copy数目相关的函数的时候，一定要重点关注dst和num这两个值，要关注dst的来源是什么，是否和num同步，是否可能造成溢出，像这个漏洞是否dst是直接由用户指定的，这都是根据dst的来源而定的</li>
+</ol>
+</li>
 </ul>
+<h2 id="0x03-A-BUG-OLDER-THAN-4-4BSD-漏洞"><a href="#0x03-A-BUG-OLDER-THAN-4-4BSD-漏洞" class="headerlink" title="0x03 A BUG OLDER THAN 4.4BSD 漏洞"></a>0x03 A BUG OLDER THAN 4.4BSD 漏洞</h2><ul>
+<li>ROOT CAUSE<br>从payload中转化的长度信息，赋值给了有符号数，对有符号的比较，比较绕过，导致越界的访问</li>
+<li>如何发现这个漏洞<ol>
+<li>在追踪数据流的时候，不仅对数据的长度信息关注，还需要对任何数目相关的字段关注，这些字段的比较大小是容易出错的</li>
+<li>特别这些数目是有符号数的比较，是非常危险的，一定要注意小于0的情况是否是预期内的</li>
+</ol>
+</li>
+</ul>
+<h2 id="0x04-THE-RINGTONE-MASSACRE漏洞"><a href="#0x04-THE-RINGTONE-MASSACRE漏洞" class="headerlink" title="0x04 THE RINGTONE MASSACRE漏洞"></a>0x04 THE RINGTONE MASSACRE漏洞</h2><ul>
+<li>Fuzz方法<br>变异策略<ul>
+<li>通过对一个合法的文件格式进行逐个字节的0xff替换</li>
+<li>这种变异策略是相对高效的，可以找到一些简单的有关长度的漏洞，而且不需要对格式协议有详细的了解，smb也可以尝试利用同样的方法进行一些测试。</li>
+</ul>
+</li>
+</ul>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>本文主要是对书中几个漏洞的根因进行了提炼，对根因的理解抽象才能够举一反三，所以漏洞原因也尽量精简，笔者也在整理漏洞挖掘方法，但是由于分析的漏洞数量不够多，还不好拿出分享，等到分析足够多的漏洞，到时会以makdown map的形式展示出。<br>以后也会经常以本篇文章的形式分析一系列漏洞。</p>
+<h2 id="版权声明"><a href="#版权声明" class="headerlink" title="版权声明"></a>版权声明</h2><p>本文作者为colorlight，转载请注明出处 <a href="https://colorlight.github.io">https://colorlight.github.io</a></p>
 
       
     </div>
@@ -580,11 +592,11 @@
       
         <div class="post-tags">
           
-            <a href="/tags/操作系统/" rel="tag"># 操作系统</a>
+            <a href="/tags/如何发现漏洞/" rel="tag"># 如何发现漏洞</a>
           
-            <a href="/tags/I-O/" rel="tag"># I/O</a>
+            <a href="/tags/ROOT-CAUSE/" rel="tag"># ROOT CAUSE</a>
           
-            <a href="/tags/mmap/" rel="tag"># mmap</a>
+            <a href="/tags/Fuzz-变异策略/" rel="tag"># Fuzz 变异策略</a>
           
         </div>
       
@@ -597,15 +609,15 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
+              <a href="/2020/07/29/伪造LTE地震海啸警报/" rel="next" title="伪造LTE地震海啸警报">
+                <i class="fa fa-chevron-left"></i> 伪造LTE地震海啸警报
+              </a>
+            
           </div>
 
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2020/07/29/伪造LTE地震海啸警报/" rel="prev" title="伪造LTE地震海啸警报">
-                伪造LTE地震海啸警报 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -797,7 +809,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#read过程"><span class="nav-number">1.</span> <span class="nav-text">read过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#write过程"><span class="nav-number">2.</span> <span class="nav-text">write过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#减少复制的方法"><span class="nav-number">3.</span> <span class="nav-text">减少复制的方法</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x00-ESCAPE-FROM-WWW-ZONE漏洞"><span class="nav-number">2.</span> <span class="nav-text">0x00 ESCAPE FROM WWW ZONE漏洞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01-NULL-POINTER-FTW漏洞"><span class="nav-number">3.</span> <span class="nav-text">0x01 NULL POINTER FTW漏洞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02-ONE-KERNEL-TO-RULE-THEM-ALL-漏洞"><span class="nav-number">4.</span> <span class="nav-text">0x02 ONE KERNEL TO RULE THEM ALL 漏洞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x03-A-BUG-OLDER-THAN-4-4BSD-漏洞"><span class="nav-number">5.</span> <span class="nav-text">0x03 A BUG OLDER THAN 4.4BSD 漏洞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x04-THE-RINGTONE-MASSACRE漏洞"><span class="nav-number">6.</span> <span class="nav-text">0x04 THE RINGTONE MASSACRE漏洞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">7.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#版权声明"><span class="nav-number">8.</span> <span class="nav-text">版权声明</span></a></li></ol></div>
             
 
           </div>
