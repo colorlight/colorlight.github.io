@@ -449,12 +449,12 @@ body {
 }
 @media (min-width: 1200px) {
   .container .header-inner {
-    width: 1160px;
+    width: 85em;
   }
 }
 @media (min-width: 1600px) {
   .container .header-inner {
-    width: 73%;
+    width: 50%;
   }
 }
 .main-inner {
@@ -463,12 +463,12 @@ body {
 }
 @media (min-width: 1200px) {
   .container .main-inner {
-    width: 1160px;
+    width: 85em;
   }
 }
 @media (min-width: 1600px) {
   .container .main-inner {
-    width: 73%;
+    width: 50%;
   }
 }
 .footer {
@@ -481,12 +481,12 @@ body {
 }
 @media (min-width: 1200px) {
   .container .footer-inner {
-    width: 1160px;
+    width: 85em;
   }
 }
 @media (min-width: 1600px) {
   .container .footer-inner {
-    width: 73%;
+    width: 50%;
   }
 }
 pre,
@@ -1821,7 +1821,7 @@ pre .javascript .function {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #1449ff;
+  background: #bfff41;
 }
 .feed-link,
 .chat {
@@ -2419,12 +2419,12 @@ ul.breadcrumb li+li:last-child {
 }
 @media (min-width: 1200px) {
   .header {
-    width: 1160px;
+    width: 85em;
   }
 }
 @media (min-width: 1600px) {
   .header {
-    width: 73%;
+    width: 50%;
   }
 }
 @media (max-width: 991px) {
