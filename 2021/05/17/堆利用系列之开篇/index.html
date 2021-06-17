@@ -15,11 +15,11 @@
 
 
 <html class="theme-next pisces use-motion" lang="zh-CN">
-<head><meta name="generator" content="Hexo 3.8.0">
-  <meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
-<meta name="theme-color" content="#222">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222"/>
 
 
 
@@ -44,9 +44,9 @@
 
 
 
-<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2"/>
 
-<link rel="stylesheet" href="/css/main.css?v=7.0.1">
+<link rel="stylesheet" href="/css/main.css?v=7.0.1"/>
 
 
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.0.1">
@@ -69,7 +69,7 @@
 <script id="hexo.configurations">
   var NexT = window.NexT || {};
   var CONFIG = {
-    root: '/',
+    root: '',
     scheme: 'Pisces',
     version: '7.0.1',
     sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
@@ -97,33 +97,33 @@
 
 
   <meta name="description" content="堆利用系列之开篇前言堆利用这块内容相对独立但是类型较多，希望本系列文章能够让读者掌握堆利用的一些通用方法，建立堆利用的基本知识体系。堆是一块需要动态管理的内存，glibc是实现堆管理的库，为了效率更高的管理堆，引入了很多机制，这就给利用堆破坏漏洞实现代码执行提供了很多攻击面。但是，相比于栈破坏的利用，堆本身就很复杂，需要理解堆的一些关键部分的工作原理，才能更好的写出利用代码，因此我们这篇文章先学习">
-<meta name="keywords" content="堆利用">
 <meta property="og:type" content="article">
-<meta property="og:title" content="堆利用系列之开篇">
-<meta property="og:url" content="https://colorlight.github.io/2021/05/17/堆利用系列之开篇/index.html">
+<meta property="og:title" content="堆利用系列一：开篇">
+<meta property="og:url" content="https://colorlight.github.io/2021/05/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8B%E5%BC%80%E7%AF%87/index.html">
 <meta property="og:site_name" content="Colorlight&#39;s Blog">
 <meta property="og:description" content="堆利用系列之开篇前言堆利用这块内容相对独立但是类型较多，希望本系列文章能够让读者掌握堆利用的一些通用方法，建立堆利用的基本知识体系。堆是一块需要动态管理的内存，glibc是实现堆管理的库，为了效率更高的管理堆，引入了很多机制，这就给利用堆破坏漏洞实现代码执行提供了很多攻击面。但是，相比于栈破坏的利用，堆本身就很复杂，需要理解堆的一些关键部分的工作原理，才能更好的写出利用代码，因此我们这篇文章先学习">
-<meta property="og:locale" content="zh-CN">
+<meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://colorlight.github.io/images/heap_exp/2021-05-17-15-44-41.png">
 <meta property="og:image" content="https://colorlight.github.io/images/heap_exp/2021-05-17-16-00-30.png">
 <meta property="og:image" content="https://colorlight.github.io/images/heap_exp/2021-05-17-16-30-58.png">
 <meta property="og:image" content="https://colorlight.github.io/images/heap_exp/2021-05-18-10-25-09.png">
 <meta property="og:image" content="https://colorlight.github.io/images/heap_exp/2021-05-18-11-32-00.png">
 <meta property="og:image" content="https://colorlight.github.io/images/heap_exp/2021-05-18-11-49-04.png">
-<meta property="og:updated_time" content="2021-06-17T12:01:15.029Z">
+<meta property="article:published_time" content="2021-05-17T10:31:13.000Z">
+<meta property="article:modified_time" content="2021-06-17T13:12:55.384Z">
+<meta property="article:author" content="Colorlight">
+<meta property="article:tag" content="堆利用">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="堆利用系列之开篇">
-<meta name="twitter:description" content="堆利用系列之开篇前言堆利用这块内容相对独立但是类型较多，希望本系列文章能够让读者掌握堆利用的一些通用方法，建立堆利用的基本知识体系。堆是一块需要动态管理的内存，glibc是实现堆管理的库，为了效率更高的管理堆，引入了很多机制，这就给利用堆破坏漏洞实现代码执行提供了很多攻击面。但是，相比于栈破坏的利用，堆本身就很复杂，需要理解堆的一些关键部分的工作原理，才能更好的写出利用代码，因此我们这篇文章先学习">
 <meta name="twitter:image" content="https://colorlight.github.io/images/heap_exp/2021-05-17-15-44-41.png">
 
 
 
-  <link rel="alternate" href="/atom.xml" title="Colorlight's Blog" type="application/atom+xml">
+  <link rel="alternate" href="/atom.xml" title="Colorlight's Blog" type="application/atom+xml"/>
 
 
 
 
-  <link rel="canonical" href="https://colorlight.github.io/2021/05/17/堆利用系列之开篇/">
+  <link rel="canonical" href="https://colorlight.github.io/2021/05/17/堆利用系列之开篇/"/>
 
 
 
@@ -133,7 +133,7 @@
   };
 </script>
 
-  <title>堆利用系列之开篇 | Colorlight's Blog</title>
+  <title>堆利用系列一：开篇 | Colorlight's Blog</title>
   
 
 
@@ -172,7 +172,7 @@
   </style>
 </noscript>
 
-</head>
+<meta name="generator" content="Hexo 5.4.0"></head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
 
@@ -233,7 +233,7 @@
 
     
 
-    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br/>首页</a>
 
   </li>
         
@@ -250,7 +250,7 @@
 
     
 
-    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br/>关于</a>
 
   </li>
         
@@ -267,7 +267,7 @@
 
     
 
-    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br/>标签</a>
 
   </li>
         
@@ -284,7 +284,7 @@
 
     
 
-    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br/>分类</a>
 
   </li>
         
@@ -301,7 +301,7 @@
 
     
 
-    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br/>归档</a>
 
   </li>
         
@@ -318,7 +318,7 @@
 
     
 
-    <a href="/sitemap.xml" rel="section"><i class="menu-item-icon fa fa-fw fa-sitemap"></i> <br>站点地图</a>
+    <a href="/sitemap.xml" rel="section"><i class="menu-item-icon fa fa-fw fa-sitemap"></i> <br/>站点地图</a>
 
   </li>
 
@@ -329,7 +329,7 @@
             <a href="javascript:;" class="popup-trigger">
           
             
-              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br/>搜索</a>
         </li>
       
     </ul>
@@ -349,7 +349,9 @@
       <i class="fa fa-times-circle"></i>
     </span>
     <div class="local-search-input-wrapper">
-      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+      <input autocomplete="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
     </div>
   </div>
   <div id="local-search-result"></div>
@@ -378,7 +380,7 @@
 
   
 
-  <a href="https://github.com/colorlight" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewbox="0 0 250 250" style="fill: #222; color: #fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a>
+  <a href="https://github.com/colorlight" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" style="fill: #222; color: #fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
 
 
 
@@ -408,16 +410,16 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://colorlight.github.io/2021/05/17/堆利用系列之开篇/">
+    <link itemprop="mainEntityOfPage" href="https://colorlight.github.io/2021/05/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8B%E5%BC%80%E7%AF%87/"/>
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Colorlight">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="https://avatars1.githubusercontent.com/u/13530839?s=460&v=4">
+      <meta itemprop="name" content="Colorlight"/>
+      <meta itemprop="description" content=""/>
+      <meta itemprop="image" content="https://avatars1.githubusercontent.com/u/13530839?s=460&v=4"/>
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Colorlight's Blog">
+      <meta itemprop="name" content="Colorlight's Blog"/>
     </span>
 
     
@@ -425,7 +427,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">堆利用系列之开篇
+          <h1 class="post-title" itemprop="name headline">堆利用系列一：开篇
 
               
             
@@ -469,7 +471,7 @@
                 <span class="post-meta-item-text">分类于</span>
               
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/堆利用/" itemprop="url" rel="index"><span itemprop="name">堆利用</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/%E5%A0%86%E5%88%A9%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">堆利用</span></a></span>
 
                 
                 
@@ -488,8 +490,8 @@
                 </span>
             
                 <span class="post-meta-item-text">评论数：</span>
-                <a href="/2021/05/17/堆利用系列之开篇/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2021/05/17/堆利用系列之开篇/" itemprop="commentCount"></span>
+                <a href="/2021/05/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8B%E5%BC%80%E7%AF%87/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2021/05/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8B%E5%BC%80%E7%AF%87/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -635,7 +637,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/堆利用/" rel="tag"># 堆利用</a>
+            <a href="/tags/%E5%A0%86%E5%88%A9%E7%94%A8/" rel="tag"># 堆利用</a>
           
         </div>
       
@@ -648,7 +650,7 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2021/04/27/CVE-2021-31802 Netgear R7000 preAuth RCE/" rel="next" title="CVE-2021-31802 NETGEAR R7000 httpd PreAuth RCE">
+              <a href="/2021/04/27/CVE-2021-31802%20Netgear%20R7000%20preAuth%20RCE/" rel="next" title="CVE-2021-31802 NETGEAR R7000 httpd PreAuth RCE">
                 <i class="fa fa-chevron-left"></i> CVE-2021-31802 NETGEAR R7000 httpd PreAuth RCE
               </a>
             
@@ -657,6 +659,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8B%C2%96%E5%A0%86%E6%BC%8F%E6%B4%9E/" rel="prev" title="堆利用系列二：堆漏洞">
+                堆利用系列二：堆漏洞 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -718,7 +724,9 @@
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
-              <img class="site-author-image" itemprop="image" src="https://avatars1.githubusercontent.com/u/13530839?s=460&v=4" alt="Colorlight">
+              <img class="site-author-image" itemprop="image"
+                src="https://avatars1.githubusercontent.com/u/13530839?s=460&v=4"
+                alt="Colorlight"/>
             
               <p class="site-author-name" itemprop="name">Colorlight</p>
               <div class="site-description motion-element" itemprop="description"></div>
@@ -729,9 +737,9 @@
               
                 <div class="site-state-item site-state-posts">
                 
-                  <a href="/archives/">
+                  <a href="/archives/%20%7C%7C%20archive">
                 
-                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-count">12</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
@@ -743,7 +751,7 @@
                 <div class="site-state-item site-state-categories">
                   
                     
-                      <a href="/categories/">
+                      <a href="/categories/%20%7C%7C%20th">
                     
                   
                     
@@ -768,7 +776,7 @@
                 <div class="site-state-item site-state-tags">
                   
                     
-                      <a href="/tags/">
+                      <a href="/tags/%20%7C%7C%20tags">
                     
                   
                     
@@ -828,7 +836,7 @@
     <h3 class="widget-title"></h3>
     <div id="myCanvasContainer" class="widget tagcloud">
         <canvas width="250" height="250" id="resCanvas" style="width=100%">
-            <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Fuzz-变异策略/">Fuzz 变异策略</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IoT-Security/">IoT Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LTE安全/">LTE安全</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PWS/">PWS</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ROOT-CAUSE/">ROOT CAUSE</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/伪造地震消息/">伪造地震消息</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/堆利用/">堆利用</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/如何发现漏洞/">如何发现漏洞</a><span class="tag-list-count">1</span></li></ul>
+            <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Fuzz-%E5%8F%98%E5%BC%82%E7%AD%96%E7%95%A5/" rel="tag">Fuzz 变异策略</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IoT-Security/" rel="tag">IoT Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LTE%E5%AE%89%E5%85%A8/" rel="tag">LTE安全</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/PWS/" rel="tag">PWS</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ROOT-CAUSE/" rel="tag">ROOT CAUSE</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E4%BC%AA%E9%80%A0%E5%9C%B0%E9%9C%87%E6%B6%88%E6%81%AF/" rel="tag">伪造地震消息</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%A0%86%E5%88%A9%E7%94%A8/" rel="tag">堆利用</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%A6%82%E4%BD%95%E5%8F%91%E7%8E%B0%E6%BC%8F%E6%B4%9E/" rel="tag">如何发现漏洞</a><span class="tag-list-count">1</span></li></ul>
         </canvas>
     </div>
 </div>
@@ -848,7 +856,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#堆利用系列之开篇"><span class="nav-number">1.</span> <span class="nav-text">堆利用系列之开篇</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">2.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于libc的版本"><span class="nav-number">3.</span> <span class="nav-text">关于libc的版本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Malloc-Chunk"><span class="nav-number">4.</span> <span class="nav-text">Malloc Chunk</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bins"><span class="nav-number">5.</span> <span class="nav-text">Bins</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Fast-bin"><span class="nav-number">5.1.</span> <span class="nav-text">Fast bin</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tcache"><span class="nav-number">5.2.</span> <span class="nav-text">tcache</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Unsorted，-Large-和-Small-bins"><span class="nav-number">5.3.</span> <span class="nav-text">Unsorted， Large 和 Small bins</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Top-chunk"><span class="nav-number">5.4.</span> <span class="nav-text">Top chunk</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#各种bin和chunk在内存中的示意图"><span class="nav-number">5.5.</span> <span class="nav-text">各种bin和chunk在内存中的示意图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Main-Arena"><span class="nav-number">5.6.</span> <span class="nav-text">Main Arena</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Consolidation"><span class="nav-number">5.7.</span> <span class="nav-text">Consolidation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#与堆利用相关的"><span class="nav-number">5.8.</span> <span class="nav-text">与堆利用相关的</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#版权声明"><span class="nav-number">7.</span> <span class="nav-text">版权声明</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8B%E5%BC%80%E7%AF%87"><span class="nav-number">1.</span> <span class="nav-text">堆利用系列之开篇</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">2.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8Elibc%E7%9A%84%E7%89%88%E6%9C%AC"><span class="nav-number">3.</span> <span class="nav-text">关于libc的版本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Malloc-Chunk"><span class="nav-number">4.</span> <span class="nav-text">Malloc Chunk</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bins"><span class="nav-number">5.</span> <span class="nav-text">Bins</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Fast-bin"><span class="nav-number">5.1.</span> <span class="nav-text">Fast bin</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tcache"><span class="nav-number">5.2.</span> <span class="nav-text">tcache</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Unsorted%EF%BC%8C-Large-%E5%92%8C-Small-bins"><span class="nav-number">5.3.</span> <span class="nav-text">Unsorted， Large 和 Small bins</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Top-chunk"><span class="nav-number">5.4.</span> <span class="nav-text">Top chunk</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%84%E7%A7%8Dbin%E5%92%8Cchunk%E5%9C%A8%E5%86%85%E5%AD%98%E4%B8%AD%E7%9A%84%E7%A4%BA%E6%84%8F%E5%9B%BE"><span class="nav-number">5.5.</span> <span class="nav-text">各种bin和chunk在内存中的示意图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Main-Arena"><span class="nav-number">5.6.</span> <span class="nav-text">Main Arena</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Consolidation"><span class="nav-number">5.7.</span> <span class="nav-text">Consolidation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8E%E5%A0%86%E5%88%A9%E7%94%A8%E7%9B%B8%E5%85%B3%E7%9A%84"><span class="nav-number">5.8.</span> <span class="nav-text">与堆利用相关的</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%88%E6%9D%83%E5%A3%B0%E6%98%8E"><span class="nav-number">7.</span> <span class="nav-text">版权声明</span></a></li></ol></div>
             
 
           </div>
@@ -886,7 +894,7 @@
 </div>
 
 
-  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v5.4.0</div>
 
 
 

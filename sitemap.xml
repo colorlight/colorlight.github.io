@@ -2,7 +2,63 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://colorlight.github.io/about/index.html</loc>
+    <loc>https://colorlight.github.io/2021/04/27/CVE-2021-31802%20Netgear%20R7000%20preAuth%20RCE/</loc>
+    
+    <lastmod>2021-06-17</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://colorlight.github.io/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E5%85%AB%EF%BC%9A%C2%96House-of-Spirit/</loc>
+    
+    <lastmod>2021-06-17</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://colorlight.github.io/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%9D%EF%BC%9AHouse-of-Lore/</loc>
+    
+    <lastmod>2021-06-17</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://colorlight.github.io/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8B%C2%96%E5%A0%86%E6%BC%8F%E6%B4%9E/</loc>
+    
+    <lastmod>2021-06-17</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://colorlight.github.io/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8BUnsorted-Bin-Attack/</loc>
+    
+    <lastmod>2021-06-17</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://colorlight.github.io/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8Bunlink/</loc>
+    
+    <lastmod>2021-06-17</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://colorlight.github.io/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8BLarge-Bin-Attack/</loc>
+    
+    <lastmod>2021-06-17</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://colorlight.github.io/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8BFastbin-Attack/</loc>
+    
+    <lastmod>2021-06-17</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://colorlight.github.io/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B8%83%EF%BC%9ATcache-Attack/</loc>
     
     <lastmod>2021-06-17</lastmod>
     
@@ -16,9 +72,9 @@
   </url>
   
   <url>
-    <loc>https://colorlight.github.io/2021/04/27/CVE-2021-31802%20Netgear%20R7000%20preAuth%20RCE/</loc>
+    <loc>https://colorlight.github.io/about/index.html</loc>
     
-    <lastmod>2021-04-27</lastmod>
+    <lastmod>2021-06-17</lastmod>
     
   </url>
   
@@ -60,6 +116,13 @@
 
   
   <url>
+    <loc>https://colorlight.github.io/tags/IoT-Security/</loc>
+    <lastmod>2021-06-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://colorlight.github.io/tags/PWS/</loc>
     <lastmod>2021-06-17</lastmod>
     <changefreq>daily</changefreq>
@@ -81,7 +144,7 @@
   </url>
   
   <url>
-    <loc>https://colorlight.github.io/tags/IoT-Security/</loc>
+    <loc>https://colorlight.github.io/tags/%E5%A0%86%E5%88%A9%E7%94%A8/</loc>
     <lastmod>2021-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -108,21 +171,7 @@
     <priority>0.6</priority>
   </url>
   
-  <url>
-    <loc>https://colorlight.github.io/tags/%E5%A0%86%E5%88%A9%E7%94%A8/</loc>
-    <lastmod>2021-06-17</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
 
-  
-  <url>
-    <loc>https://colorlight.github.io/categories/LTE-security/</loc>
-    <lastmod>2021-06-17</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
   
   <url>
     <loc>https://colorlight.github.io/categories/IoT-Security/</loc>
@@ -132,7 +181,7 @@
   </url>
   
   <url>
-    <loc>https://colorlight.github.io/categories/%E6%BC%8F%E6%B4%9E%E6%8C%96%E6%8E%98%E6%96%B9%E6%B3%95/</loc>
+    <loc>https://colorlight.github.io/categories/LTE-security/</loc>
     <lastmod>2021-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -140,6 +189,13 @@
   
   <url>
     <loc>https://colorlight.github.io/categories/%E5%A0%86%E5%88%A9%E7%94%A8/</loc>
+    <lastmod>2021-06-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://colorlight.github.io/categories/%E6%BC%8F%E6%B4%9E%E6%8C%96%E6%8E%98%E6%96%B9%E6%B3%95/</loc>
     <lastmod>2021-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>

